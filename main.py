@@ -28,7 +28,7 @@ class Form(QDialog):
         # create widgets
         self.edit = QLineEdit(proxy.fill_in())
         self.button_clear = QPushButton('Clear')
-        self.button_save = QPushButton('Save')
+        self.button_save = QPushButton('Apply')
 
         self.logTextBox = QTextEditLogger(self)
         # You can format what is printed to text box
@@ -52,8 +52,7 @@ class Form(QDialog):
         self.button_save.clicked.connect(self.proxy_changer)
 
     def proxy_changer(self):
-        print(self.edit.text())
-        logging.info('Clicked a button')
+        proxy.change_address(self.edit.text())
 
 
 if __name__ == '__main__':

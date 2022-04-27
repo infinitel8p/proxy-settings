@@ -6,11 +6,23 @@ proxy_server_address = 0
 proxy_port = 0
 deactivate = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
 activate = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 1 /f'
-change_address = f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {proxy_server_address}:{proxy_port} /f'
 
-#shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe', lpParameters='/c ' + deactivate)
 
 logger = logging.getLogger(__name__)
+
+
+def autostart():
+    # check current regkey value for proxy
+    regkey_check = subprocess.Popen(
+        'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable', shell=True, stdout=subprocess.PIPE)
+    regkey_check_return = regkey_check.stdout.read().split()
+
+    if regkey_check_return[-1] == b'0x0':
+        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
+                             lpParameters='/c ' + activate)
+    if regkey_check_return[-1] == b'0x1':
+        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
+                             lpParameters='/c ' + deactivate)
 
 
 def fill_in():
@@ -86,3 +98,12 @@ def server_check():
         else:
             logger.debug(
                 f"{regkey_check_return2[-1]}, {type(regkey_check_return2[-1])}")
+
+
+def change_address(new_address):
+    shell.ShellExecuteEx(lpFile='cmd.exe',
+                         lpParameters='/c ' + f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f')
+    logger.info(f"Changed Proxy Server to {new_address}")
+
+
+autostart()
