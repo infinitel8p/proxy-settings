@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         self.edit = QLineEdit(proxy.fill_in())
         self.button_save = QPushButton('Apply new Proxy Address')
         self.button_save.setStyleSheet("""
-                                       background-color: #007ef0;
+                                       background-color: #ffdeea;
                                        color: black;
                                        """)
         self.button_save.setFixedWidth(150)
