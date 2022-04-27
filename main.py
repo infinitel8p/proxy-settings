@@ -34,7 +34,7 @@ class Form(QDialog):
         self.logTextBox.setFormatter(logging.Formatter(
             '%(levelname)s - %(message)s'))
         logging.getLogger().addHandler(self.logTextBox)
-        # You can control the logging level
+        # control the logging level
         logging.getLogger().setLevel(logging.DEBUG)
 
         # create layout
@@ -56,13 +56,14 @@ class Form(QDialog):
 
 
 if __name__ == '__main__':
-    # check current settings first
-    proxy.status_check()
-    proxy.server_check()
+    logger = logging.getLogger(__name__)
     # create QtApplication
     app = QApplication(sys.argv)
     # create and show the window
     settings = Form()
     settings.show()
+    # check current settings
+    proxy.status_check()
+    proxy.server_check()
     # run the main Qt loop
     sys.exit(app.exec())

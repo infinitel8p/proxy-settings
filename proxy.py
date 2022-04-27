@@ -1,7 +1,6 @@
-import subprocess
 import logging
+import subprocess
 import win32com.shell.shell as shell
-
 
 proxy_server_address = 0
 proxy_port = 0
@@ -10,6 +9,8 @@ activate = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Set
 change_address = f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {proxy_server_address}:{proxy_port} /f'
 
 #shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe', lpParameters='/c ' + deactivate)
+
+logger = logging.getLogger(__name__)
 
 
 def status_check():
@@ -20,11 +21,11 @@ def status_check():
 
     if regkey_check_return[-1] == b'0x0':
         print('Proxy is currently inactive')
-        logging.info('Proxy is currently inactive')
+        logger.info('Proxy is currently inactive')
         return
     if regkey_check_return[-1] == b'0x1':
         print('Proxy is currently active')
-        logging.info('Proxy is currently active')
+        logger.info('Proxy is currently active')
         return
     else:
         print(
