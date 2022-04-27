@@ -2,10 +2,10 @@ import logging
 import subprocess
 import win32com.shell.shell as shell
 
-proxy_server_address = 0
-proxy_port = 0
-deactivate = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
-activate = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 1 /f'
+proxy_server_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
+proxy_status_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable'
+deactivate_proxy = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
+activate_proxy = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 1 /f'
 
 
 logger = logging.getLogger(__name__)
@@ -14,21 +14,21 @@ logger = logging.getLogger(__name__)
 def autostart():
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
-        'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable', shell=True, stdout=subprocess.PIPE)
+        proxy_status_query, shell=True, stdout=subprocess.PIPE)
     regkey_check_return = regkey_check.stdout.read().split()
 
     if regkey_check_return[-1] == b'0x0':
         shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                             lpParameters='/c ' + activate)
+                             lpParameters='/c ' + activate_proxy)
     if regkey_check_return[-1] == b'0x1':
         shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                             lpParameters='/c ' + deactivate)
+                             lpParameters='/c ' + deactivate_proxy)
 
 
 def fill_in():
     try:
         value = subprocess.check_output(
-            'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer').decode("utf-8").split()[-1]
+            proxy_server_query).decode("utf-8").split()[-1]
         return value
     except:
         value = "0.0.0.0:0"
@@ -39,7 +39,7 @@ def status_check():
     global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
-        'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable', shell=True, stdout=subprocess.PIPE)
+        proxy_status_query, shell=True, stdout=subprocess.PIPE)
     regkey_check_return = regkey_check.stdout.read().split()
 
     if regkey_check_return[-1] == b'0x0':
@@ -57,7 +57,7 @@ def server_check():
     global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
-        'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer', shell=True, stdout=subprocess.PIPE)
+        proxy_server_query, shell=True, stdout=subprocess.PIPE)
     regkey_check_return = regkey_check.stdout.read().split()
 
     # try to convert outputted bytes to string
@@ -87,7 +87,7 @@ def server_check():
 
         # try to read the value again
         regkey_check2 = subprocess.Popen(
-            'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer', shell=True, stdout=subprocess.PIPE)
+            proxy_server_query, shell=True, stdout=subprocess.PIPE)
         regkey_check_return2 = regkey_check2.stdout.read().split()
 
         # convert outputted bytes to string
