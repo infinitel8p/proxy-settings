@@ -1,6 +1,7 @@
 import sys
 import proxy
 import logging
+import subprocess
 from PySide6.QtWidgets import (
     QLineEdit, QPushButton, QApplication, QVBoxLayout, QDialog, QPlainTextEdit)
 
@@ -25,7 +26,7 @@ class Form(QDialog):
         self.setWindowTitle('Proxy Settings')
 
         # create widgets
-        self.edit = QLineEdit(proxy.server_check())
+        self.edit = QLineEdit(proxy.fill_in())
         self.button_clear = QPushButton('Clear')
         self.button_save = QPushButton('Save')
 
@@ -35,7 +36,7 @@ class Form(QDialog):
             '%(levelname)s - %(message)s'))
         logging.getLogger().addHandler(self.logTextBox)
         # control the logging level
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.NOTSET)
 
         # create layout
         layout = QVBoxLayout()

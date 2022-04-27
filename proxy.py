@@ -13,26 +13,36 @@ change_address = f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Inter
 logger = logging.getLogger(__name__)
 
 
+def fill_in():
+    try:
+        value = subprocess.check_output(
+            'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer').decode("utf-8").split()[-1]
+        return value
+    except:
+        value = "0.0.0.0:0"
+        return value
+
+
 def status_check():
+    global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
         'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable', shell=True, stdout=subprocess.PIPE)
     regkey_check_return = regkey_check.stdout.read().split()
 
     if regkey_check_return[-1] == b'0x0':
-        print('Proxy is currently inactive')
         logger.info('Proxy is currently inactive')
         return
     if regkey_check_return[-1] == b'0x1':
-        print('Proxy is currently active')
         logger.info('Proxy is currently active')
         return
     else:
-        print(
-            f"Debug: {regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
+        logger.debug(
+            f"{regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
 
 
 def server_check():
+    global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
         'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer', shell=True, stdout=subprocess.PIPE)
@@ -43,21 +53,25 @@ def server_check():
         value = regkey_check_return[-1].decode("utf-8")
         # if output was indeed bytes return its value which now should be a string to main.py
         if type(regkey_check_return[-1]) is bytes:
+            logger.info(f"Current Proxy Server: {value}")
             return value
         else:
-            # if the output was not in bytes print its value and type for debugging purposes
-            print(
-                f"Debug: {regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
+            # if the output was not in bytes log its value and type for debugging purposes
+            logger.debug(
+                f"{regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
 
     # handle error most likely resulting from missing reg key
     except:
         # create missing reg key with placeholder address
-        print("Creating Registry key, setting proxy address...")
+        logger.warning("No Proxy Server found!")
+        logger.info("Creating REG_SZ key, setting proxy address...")
         create_proxy_regsz = subprocess.Popen(
             f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f', shell=True, stdout=subprocess.PIPE)
         create_proxy_regsz_return = create_proxy_regsz.stdout.read()
-        print(
-            f'{create_proxy_regsz_return.decode("utf-8")}Set Proxy address to: 0.0.0.0:0')
+        create_proxy_regsz_return = create_proxy_regsz_return.decode(
+            "utf-8").split()
+        logger.info(" ".join(create_proxy_regsz_return))
+        logger.info("Set Proxy address to: 0.0.0.0:0")
 
         # try to read the value again
         regkey_check2 = subprocess.Popen(
@@ -67,7 +81,8 @@ def server_check():
         # convert outputted bytes to string
         value = regkey_check_return2[-1].decode("utf-8")
         if type(regkey_check_return2[-1]) is bytes:
+            logger.info(f"Current Proxy Server: {value}")
             return value
         else:
-            print(
-                f"Debug: {regkey_check_return2[-1]}, {type(regkey_check_return2[-1])}")
+            logger.debug(
+                f"{regkey_check_return2[-1]}, {type(regkey_check_return2[-1])}")
