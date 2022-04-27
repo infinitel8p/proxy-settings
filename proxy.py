@@ -24,7 +24,6 @@ def status_check():
         print('Proxy is currently active')
         return
     else:
-        print("Unable to read registry key")
         print(
             f"Debug: {regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
 
@@ -34,12 +33,37 @@ def server_check():
     regkey_check = subprocess.Popen(
         'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer', shell=True, stdout=subprocess.PIPE)
     regkey_check_return = regkey_check.stdout.read().split()
-    # convert outputted bytes to string
-    value = regkey_check_return[-1].decode("utf-8")
 
-    if type(regkey_check_return[-1]) is bytes:
-        return value
-    else:
-        print("Unable to read registry key")
+    # try to convert outputted bytes to string
+    try:
+        value = regkey_check_return[-1].decode("utf-8")
+        # if output was indeed bytes return its value which now should be a string to main.py
+        if type(regkey_check_return[-1]) is bytes:
+            return value
+        else:
+            # if the output was not in bytes print its value and type for debugging purposes
+            print(
+                f"Debug: {regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
+
+    # handle error most likely resulting from missing reg key
+    except:
+        # create missing reg key with placeholder address
+        print("Creating Registry key, setting proxy address...")
+        create_proxy_regsz = subprocess.Popen(
+            f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f', shell=True, stdout=subprocess.PIPE)
+        create_proxy_regsz_return = create_proxy_regsz.stdout.read()
         print(
-            f"Debug: {regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
+            f'{create_proxy_regsz_return.decode("utf-8")}Set Proxy address to: 0.0.0.0:0')
+
+        # try to read the value again
+        regkey_check2 = subprocess.Popen(
+            'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer', shell=True, stdout=subprocess.PIPE)
+        regkey_check_return2 = regkey_check2.stdout.read().split()
+
+        # convert outputted bytes to string
+        value = regkey_check_return2[-1].decode("utf-8")
+        if type(regkey_check_return2[-1]) is bytes:
+            return value
+        else:
+            print(
+                f"Debug: {regkey_check_return2[-1]}, {type(regkey_check_return2[-1])}")
