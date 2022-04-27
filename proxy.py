@@ -1,4 +1,5 @@
 import subprocess
+import logging
 import win32com.shell.shell as shell
 
 
@@ -19,9 +20,11 @@ def status_check():
 
     if regkey_check_return[-1] == b'0x0':
         print('Proxy is currently inactive')
+        logging.info('Proxy is currently inactive')
         return
     if regkey_check_return[-1] == b'0x1':
         print('Proxy is currently active')
+        logging.info('Proxy is currently active')
         return
     else:
         print(
