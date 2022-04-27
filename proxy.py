@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import win32com.shell.shell as shell
+from main import MainWindow
 
 proxy_server_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
 proxy_status_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable'
@@ -11,18 +12,23 @@ activate_proxy = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Intern
 logger = logging.getLogger(__name__)
 
 
-def autostart():
+def activate():
     # check current regkey value for proxy
-    regkey_check = subprocess.Popen(
-        proxy_status_query, shell=True, stdout=subprocess.PIPE)
-    regkey_check_return = regkey_check.stdout.read().split()
+    shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
+                         lpParameters='/c ' + activate_proxy)
+    logger.info('activated proxy')
 
-    if regkey_check_return[-1] == b'0x0':
-        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                             lpParameters='/c ' + activate_proxy)
-    if regkey_check_return[-1] == b'0x1':
-        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                             lpParameters='/c ' + deactivate_proxy)
+
+def deactivate():
+    shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
+                         lpParameters='/c ' + deactivate_proxy)
+    logger.info('deactivated proxy')
+
+
+def change_address(new_address):
+    shell.ShellExecuteEx(lpFile='cmd.exe',
+                         lpParameters='/c ' + f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f')
+    logger.info(f"Changed Proxy Server to {new_address}")
 
 
 def fill_in():
@@ -98,12 +104,3 @@ def server_check():
         else:
             logger.debug(
                 f"{regkey_check_return2[-1]}, {type(regkey_check_return2[-1])}")
-
-
-def change_address(new_address):
-    shell.ShellExecuteEx(lpFile='cmd.exe',
-                         lpParameters='/c ' + f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f')
-    logger.info(f"Changed Proxy Server to {new_address}")
-
-
-autostart()
