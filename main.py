@@ -4,7 +4,7 @@ import logging
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
-from py_toggle import PyToggle
+from lib.py_toggle import PyToggle
 
 # Uncomment below for terminal log messages
 # logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(name)s - %(levelname)s - %(message)s')

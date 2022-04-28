@@ -1,7 +1,6 @@
 import logging
 import subprocess
 import win32com.shell.shell as shell
-from main import MainWindow
 
 proxy_server_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
 proxy_status_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable'
