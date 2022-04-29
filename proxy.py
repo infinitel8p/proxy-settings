@@ -15,13 +15,13 @@ def activate():
     # check current regkey value for proxy
     shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                          lpParameters='/c ' + activate_proxy)
-    logger.info('activated proxy')
+    logger.info('activated Proxy')
 
 
 def deactivate():
     shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                          lpParameters='/c ' + deactivate_proxy)
-    logger.info('deactivated proxy')
+    logger.info('deactivated Proxy')
 
 
 def change_address(new_address):
