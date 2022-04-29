@@ -36,13 +36,12 @@ class MainWindow(QMainWindow):
         # create widgets
         self.edit = QLineEdit(proxy.fill_in())
         self.button_save = QPushButton('Apply new Proxy Address')
-        self.button_save.setStyleSheet("""
-                                       background-color: #ffdeea;
-                                       color: black;
-                                       """)
         self.button_save.setFixedWidth(150)
-        self.logTextBox = QTextEditLogger(self)
+        self.label = QLabel("Turn Proxy ON/OFF:")
+        self.label.setStyleSheet("color: white;")
+        self.label.setFixedWidth(150)
         self.toggle = PyToggle()
+        self.logTextBox = QTextEditLogger(self)
 
         # You can format what is printed to text box
         self.logTextBox.setFormatter(logging.Formatter(
@@ -52,15 +51,21 @@ class MainWindow(QMainWindow):
         logging.getLogger().setLevel(logging.NOTSET)
 
         # create layout
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.edit)
-        self.layout.addWidget(
-            self.button_save, Qt.AlignCenter, Qt.AlignCenter)
-        self.layout.addWidget(self.toggle, Qt.AlignCenter, Qt.AlignCenter)
-        self.layout.addWidget(self.logTextBox.widget)
+        self.main_layout = QVBoxLayout()
+        self.nested_layout_1 = QHBoxLayout()
+        self.nested_layout_2 = QHBoxLayout()
+        self.nested_layout_1.addWidget(self.edit)
+        self.nested_layout_1.addWidget(self.button_save)
+        self.nested_layout_2.addWidget(
+            self.label, Qt.AlignCenter, Qt.AlignLeft)
+        self.nested_layout_2.addWidget(
+            self.toggle, Qt.AlignCenter, Qt.AlignCenter)
+        self.main_layout.addLayout(self.nested_layout_1)
+        self.main_layout.addLayout(self.nested_layout_2)
+        self.main_layout.addWidget(self.logTextBox.widget)
         # set layout and central widget
-        self.setLayout(self.layout)
-        self.container.setLayout(self.layout)
+        self.setLayout(self.main_layout)
+        self.container.setLayout(self.main_layout)
         self.setCentralWidget(self.container)
 
         # add button signal to proxy_changer slot
