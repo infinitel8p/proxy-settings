@@ -26,6 +26,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setWindowTitle('Proxy Settings')
+        my_icon = QIcon()
+        my_icon.addFile('icon.png')
+        self.setWindowIcon(my_icon)
         # resize window
         self.resize(350, 250)
         # create container and layout
