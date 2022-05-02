@@ -1,12 +1,13 @@
 # proxy-settings
 
 Quickly activate or deactivate your proxy without having to search in the windows settings.  
-The Proxy Server Address can be changed as well.
+Change the Proxy Server Address in a matter of seconds.
 
 ## How to setup:
 
-1. Run `pip3 install -r requirements.txt`
-2. Start the `main.pyw`
+1. Download the latest released `Proxy.Settings.zip` -> https://github.com/infinitel8p/proxy-settings/releases/latest
+2. Extract the Zip
+3. Open the shortcut in the folder
 
 ## Screenshots:
 
