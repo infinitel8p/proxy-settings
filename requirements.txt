@@ -1,2 +1,1 @@
-pywin32
-pyside6
+customtkinter
