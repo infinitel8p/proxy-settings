@@ -3,10 +3,10 @@ import subprocess
 import win32com.shell.shell as shell
 
 
-proxy_server_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
-proxy_status_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable'
-deactivate_proxy = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
-activate_proxy = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 1 /f'
+proxy_server_query = r'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
+proxy_status_query = r'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable'
+deactivate_proxy = r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
+activate_proxy = r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 1 /f'
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def deactivate():
 
 def change_address(new_address):
     subprocess.run(
-        f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True)
+        fr'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True)
     logger.info(f"Changed Proxy Server to {new_address}")
 
 
@@ -84,7 +84,7 @@ def server_check():
         logger.warning("No Proxy Server found!")
         logger.info("Creating REG_SZ key, setting proxy address...")
         create_proxy_regsz = subprocess.Popen(
-            f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f', shell=True, stdout=subprocess.PIPE)
+            r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f', shell=True, stdout=subprocess.PIPE)
         create_proxy_regsz_return = create_proxy_regsz.stdout.read()
         create_proxy_regsz_return = create_proxy_regsz_return.decode(
             "utf-8").split()

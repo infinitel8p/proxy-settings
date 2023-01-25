@@ -101,7 +101,7 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.output.pack(padx=5, pady=5, fill=customtkinter.BOTH, expand=True)
         self.output.configure(state='disabled')
 
-        self.add_output(f"Downloading update...\n\n")
+        self.add_output("Downloading update...\n\n")
         time.sleep(0.5)
 
         # Get the path of the user's temporary directory
@@ -127,7 +127,7 @@ class UpdateUi(customtkinter.CTkToplevel):
         except (KeyError, IndexError):
             # If there is an error in the response, print an error message
             self.add_output(
-                f"Error: Failed to retrieve update information from GitHub.\n\nClosing setup in 5 sek...")
+                "Error: Failed to retrieve update information from GitHub.\n\nClosing setup in 5 sek...")
             time.sleep(0.5)
             self.destroy()
 
@@ -140,7 +140,7 @@ class UpdateUi(customtkinter.CTkToplevel):
         time.sleep(0.5)
 
         # log creation of updater files
-        self.add_output(f"Creating update handlers...\n\n")
+        self.add_output("Creating update handlers...\n\n")
         time.sleep(0.5)
 
         # create updater.ps1
@@ -167,7 +167,7 @@ Exit""")
             outfile.close()
 
         # log successful creation of updater.ps1
-        self.add_output(f"updater.ps1 successfully created!\n\n")
+        self.add_output("updater.ps1 successfully created!\n\n")
         time.sleep(0.5)
 
         # create updater.bat
@@ -177,15 +177,15 @@ Exit""")
             outfile.close()
 
         # log successful creation of updater.bat
-        self.add_output(f"updater.bat successfully created!\n\n")
+        self.add_output("updater.bat successfully created!\n\n")
         time.sleep(0.5)
 
         # log update start in 5 sek
-        self.add_output(f"Starting update in 5 seconds!\n\n")
+        self.add_output("Starting update in 5 seconds!\n\n")
         time.sleep(0.5)
 
         # log estimated time
-        self.add_output(f"Estimated update time: 10-15 sec.\n\n")
+        self.add_output("Estimated update time: 10-15 sec.\n\n")
         time.sleep(2.5)
 
         # launch update

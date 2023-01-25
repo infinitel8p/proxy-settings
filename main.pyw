@@ -11,6 +11,7 @@ version = "1.1"
 
 # set image path
 image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
+theme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "themes")
 
 # Create a handler to display log messages in the GUI
 
@@ -41,7 +42,8 @@ class RootApp(customtkinter.CTk):
 
         # set theme
         customtkinter.set_appearance_mode("dark")
-        customtkinter.set_default_color_theme("blue")
+        customtkinter.set_default_color_theme(
+            os.path.join(theme_path, "lavender.json"))
         self.geometry("325x330")
 
         self.version_label = customtkinter.CTkLabel(
