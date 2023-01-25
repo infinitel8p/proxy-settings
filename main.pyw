@@ -79,6 +79,7 @@ class RootApp(customtkinter.CTk):
             self.vertical_frame_1, width=150, placeholder_text="Enter new Proxy address")
         self.entry.grid(column=0, row=0, sticky="w", pady=(0, 7.5))
         self.entry.insert(0, proxy.fill_in())
+        self.entry.bind("<Return>", command=self.proxy_changer)
 
         self.button = customtkinter.CTkButton(
             self.vertical_frame_2, width=75, text="Apply")
