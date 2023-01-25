@@ -2,6 +2,7 @@ import logging
 import subprocess
 import win32com.shell.shell as shell
 
+
 proxy_server_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
 proxy_status_query = 'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable'
 deactivate_proxy = 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
@@ -15,18 +16,18 @@ def activate():
     # check current regkey value for proxy
     shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                          lpParameters='/c ' + activate_proxy)
-    logger.info('activated Proxy')
+    logger.info('Activated Proxy')
 
 
 def deactivate():
     shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                          lpParameters='/c ' + deactivate_proxy)
-    logger.info('deactivated Proxy')
+    logger.info('Deactivated Proxy')
 
 
 def change_address(new_address):
-    shell.ShellExecuteEx(lpFile='cmd.exe',
-                         lpParameters='/c ' + f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f')
+    subprocess.run(
+        f'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True)
     logger.info(f"Changed Proxy Server to {new_address}")
 
 
@@ -49,10 +50,10 @@ def status_check():
 
     if regkey_check_return[-1] == b'0x0':
         logger.info('Proxy is currently inactive')
-        return
+        return False
     if regkey_check_return[-1] == b'0x1':
         logger.info('Proxy is currently active')
-        return
+        return True
     else:
         logger.debug(
             f"{regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
