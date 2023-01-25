@@ -1,4 +1,4 @@
-# proxy-settings
+# proxy-settings [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8ffe1b08124b4498862491ad04b8f5e0)](https://www.codacy.com/gh/infinitel8p/proxy-settings/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=infinitel8p/proxy-settings&amp;utm_campaign=Badge_Grade)
 
 Quickly activate or deactivate your proxy without having to search in the windows settings.  
 Change the Proxy Server Address in a matter of seconds.
