@@ -84,7 +84,8 @@ def server_check():
         logger.warning("No Proxy Server found!")
         logger.info("Creating REG_SZ key, setting proxy address...")
         create_proxy_regsz = subprocess.Popen(
-            r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f', shell=True, stdout=subprocess.PIPE)
+            r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f',
+            shell=True, stdout=subprocess.PIPE)
         create_proxy_regsz_return = create_proxy_regsz.stdout.read()
         create_proxy_regsz_return = create_proxy_regsz_return.decode(
             "utf-8").split()
