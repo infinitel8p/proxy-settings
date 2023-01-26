@@ -13,25 +13,39 @@ logger = logging.getLogger(__name__)
 
 
 def activate():
-    # check current regkey value for proxy
+    """Activates the proxy by modifying the registry key value for the proxy.
+    """
     shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                          lpParameters='/c ' + activate_proxy)
     logger.info('Activated Proxy')
 
 
 def deactivate():
+    """Deactivates the proxy by modifying the registry key value for the proxy.
+    """
     shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                          lpParameters='/c ' + deactivate_proxy)
     logger.info('Deactivated Proxy')
 
 
 def change_address(new_address):
+    """Changes the proxy address by modifying the registry key value.
+
+    Args:
+        new_address (str): The new proxy address to be set.
+    """
     subprocess.run(
         fr'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True)
-    logger.info(f"Changed Proxy Server to {new_address}")
+    logger.info(f"Changed proxy address to {new_address}")
 
 
 def fill_in():
+    """Gets the current proxy address and returns it to be set in the entry widget of the main program.
+    If no proxy address has been set it returns `0.0.0.0:0`
+
+    Returns:
+        str: current proxy address
+    """
     try:
         value = subprocess.check_output(
             proxy_server_query).decode("utf-8").split()[-1]
@@ -42,6 +56,12 @@ def fill_in():
 
 
 def status_check():
+    """Checks if the proxy is enabled and returns `True` or `False` so the indicator switch can be
+    set in the main program.
+
+    Returns:
+        bool: current proxy status
+    """
     global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(

@@ -17,6 +17,13 @@ theme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "themes")
 
 
 class TkinterHandler(logging.Handler):
+    """
+    A logging handler that outputs logs to a Tkinter Text widget.
+
+    Args:
+        text_widget (customtkinter.CTkTextbox): The Text widget to output logs to.
+    """
+
     def __init__(self, text_widget):
         logging.Handler.__init__(self)
         self.text_widget = text_widget
@@ -29,10 +36,14 @@ class TkinterHandler(logging.Handler):
             customtkinter.END, self.log_format.format(record))
         self.text_widget.see(customtkinter.END)
         self.text_widget.configure(state='disabled')
-        self.text_widget.update()  # Refresh the widget
+        self.text_widget.update()
 
 
 class RootApp(customtkinter.CTk):
+    """
+    The main class for the application, which sets up the Tkinter GUI and handles all related functionality.
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -104,9 +115,20 @@ class RootApp(customtkinter.CTk):
         proxy.server_check()
 
     def proxy_changer(self, event=None):
+        """
+        Changes the proxy address to the value entered in the Tkinter Entry widget.
+
+        Args:
+            event (Event, optional): The event that triggered this method. Defaults to None.
+        """
         proxy.change_address(self.entry.get())
 
     def proxy_toggle(self):
+        """
+        Toggles the proxy on or off based on the value of the switch.
+        If the switch is off, the proxy is deactivated and the label text changes to 'Disabled' in red.
+        If the switch is on, the proxy is activated and the label text changes to 'Enabled' in green.
+        """
         if self.switch.get() == 0:
             proxy.deactivate()
             self.label.configure(text="Disabled", text_color="red")
