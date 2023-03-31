@@ -148,15 +148,15 @@ class UpdateUi(customtkinter.CTkToplevel):
             outfile.write(f"""echo "Closing Proxy Settings.exe.."
 Start-Sleep 2
 taskkill /F /IM "Proxy Settings.exe" /T
-echo "Copying Proxy Settings.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), 'ITSM Search Tool_1.exe')}..."
+echo "Copying Proxy Settings.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), 'Proxy Settings_1.exe')}..."
 Start-Sleep 1
-Copy-Item -Path "{os.path.join(download_path, "Proxy Settings.exe")}" -Destination "{os.path.join(os.path.dirname(sys.executable), "ITSM Search Tool_1.exe")}" -Force
+Copy-Item -Path "{os.path.join(download_path, "Proxy Settings.exe")}" -Destination "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings_1.exe")}" -Force
 echo "Deleting old executable..."
 Start-Sleep 1
 Remove-Item "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings.exe")}"
 echo "Renaming Proxy Settings_1.exe to Proxy Settings.exe..."
 Start-Sleep 1
-Rename-Item "{os.path.join(os.path.dirname(sys.executable), "ITSM Search Tool_1.exe")}" "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings.exe")}"
+Rename-Item "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings_1.exe")}" "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings.exe")}"
 echo "Launching Proxy Settings.exe..."
 Start-Sleep 3
 start "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings.exe")}"
