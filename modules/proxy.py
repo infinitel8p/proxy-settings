@@ -1,6 +1,7 @@
 import logging
 import subprocess
-import win32com.shell.shell as shell
+from win32com.shell import shell as shell
+import pywintypes
 
 
 proxy_server_query = r'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
@@ -15,17 +16,35 @@ logger = logging.getLogger(__name__)
 def activate():
     """Activates the proxy by modifying the registry key value for the proxy.
     """
-    shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                         lpParameters='/c ' + activate_proxy)
+    try:
+        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
+                             lpParameters='/c ' + activate_proxy)
+    except pywintypes.error as e:
+        if e.winerror == 1223:
+            logger.warning('Activation cancelled by the user.')
+            return False
+        else:
+            logger.error(f'An error occurred: {e}')
+            return False
     logger.info('Activated Proxy')
+    return True
 
 
 def deactivate():
     """Deactivates the proxy by modifying the registry key value for the proxy.
     """
-    shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                         lpParameters='/c ' + deactivate_proxy)
+    try:
+        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
+                             lpParameters='/c ' + deactivate_proxy)
+    except pywintypes.error as e:
+        if e.winerror == 1223:
+            logger.warning('Deactivation cancelled by the user.')
+            return False
+        else:
+            logger.error(f'An error occurred: {e}')
+            return False
     logger.info('Deactivated Proxy')
+    return True
 
 
 def change_address(new_address):

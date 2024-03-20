@@ -130,11 +130,18 @@ class RootApp(customtkinter.CTk):
         If the switch is on, the proxy is activated and the label text changes to 'Enabled' in green.
         """
         if self.switch.get() == 0:
-            proxy.deactivate()
-            self.label.configure(text="Disabled", text_color="red")
+            if proxy.deactivate():
+                self.label.configure(text="Disabled", text_color="red")
+            else:
+                self.switch.select()
+            return
+
         if self.switch.get() == 1:
-            proxy.activate()
-            self.label.configure(text="Enabled", text_color="green")
+            if proxy.activate():
+                self.label.configure(text="Enabled", text_color="green")
+            else:
+                self.switch.deselect()
+            return
 
     def check_update(self, version=version):
         """Checks for new releases on Github. If a new release is available, it downloads and 'installs' it.
