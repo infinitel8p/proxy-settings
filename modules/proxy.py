@@ -58,19 +58,34 @@ def change_address(new_address):
     logger.info(f"Changed proxy address to {new_address}")
 
 
-def fill_in():
+def fill_in_ip():
     """Gets the current proxy address and returns it to be set in the entry widget of the main program.
-    If no proxy address has been set it returns `0.0.0.0:0`
+    If no proxy address has been set it returns `0.0.0.0`
 
     Returns:
-        str: current proxy address
+        str: current proxy IP address
     """
     try:
         value = subprocess.check_output(
-            proxy_server_query).decode("utf-8").split()[-1]
+            proxy_server_query).decode("utf-8").split()[-1].split(":")[0]
         return value
     except:
-        value = "0.0.0.0:0"
+        value = "0.0.0.0"
+        return value
+
+
+def fill_in_port():
+    """Gets the current proxy port address and returns it to be set in the entry widget of the main program.
+    If no port address has been set it returns 8080`
+    Returns:
+        str: current proxy port
+    """
+    try:
+        value = subprocess.check_output(
+            proxy_server_query, shell=True).decode("utf-8").strip().split(":")[-1]
+        return value
+    except:
+        value = "8080"
         return value
 
 
