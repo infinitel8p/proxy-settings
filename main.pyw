@@ -7,7 +7,7 @@ import logging
 import json
 import os
 
-version = "1.1"
+version = "1.2"
 
 # set image path
 image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
@@ -55,7 +55,8 @@ class RootApp(customtkinter.CTk):
         customtkinter.set_appearance_mode("dark")
         customtkinter.set_default_color_theme(
             os.path.join(theme_path, "lavender.json"))
-        self.geometry("325x330")
+        self.geometry("330x330")
+        self.resizable(False, False)
 
         self.version_label = customtkinter.CTkLabel(
             self, text=f"version {version}", text_color="grey", font=("Arial", 10))
@@ -73,37 +74,54 @@ class RootApp(customtkinter.CTk):
         self.handler = TkinterHandler(self.log_output)
         self.logger.addHandler(self.handler)
 
-        # create frame for entry and button
+        # Create the main frame for widgets
         self.frame = customtkinter.CTkFrame(
             master=self, fg_color="transparent")
-        self.frame.pack(anchor="n", pady=15, padx=15, side=customtkinter.TOP)
+        self.frame.pack(pady=15, padx=15, fill="both", expand=True)
 
-        self.vertical_frame_1 = customtkinter.CTkFrame(
+        self.horizontal_frame = customtkinter.CTkFrame(
             master=self.frame, fg_color="transparent")
-        self.vertical_frame_1.grid(padx=7.5, column=0, row=0, sticky="n")
+        self.horizontal_frame.grid(
+            row=0, column=0, sticky="ew", padx=5, pady=5)
+        self.frame.grid_columnconfigure(
+            0, weight=1)
 
-        self.vertical_frame_2 = customtkinter.CTkFrame(
-            master=self.frame, fg_color="transparent")
-        self.vertical_frame_2.grid(padx=7.5, column=1, row=0, sticky="n")
+        # Proxy Address Entry
+        self.entry_ip = customtkinter.CTkEntry(
+            self.horizontal_frame, width=75, justify="center", placeholder_text="Proxy ip-address")
+        self.entry_ip.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+        self.entry_ip.insert(0, proxy.fill_in_ip())
+        self.entry_ip.bind("<Return>", command=self.proxy_changer)
 
-        self.entry = customtkinter.CTkEntry(
-            self.vertical_frame_1, width=150, placeholder_text="Enter new Proxy address")
-        self.entry.grid(column=0, row=0, sticky="w", pady=(0, 7.5))
-        self.entry.insert(0, proxy.fill_in())
-        self.entry.bind("<Return>", command=self.proxy_changer)
+        # Proxy Port Entry
+        self.entry_port = customtkinter.CTkEntry(
+            self.horizontal_frame, width=50, justify="center", placeholder_text="Proxy port")
+        self.entry_port.grid(row=0, column=1, sticky="ew", padx=(0, 5))
+        self.entry_port.insert(0, proxy.fill_in_port())
+        self.entry_port.bind("<Return>", command=self.proxy_changer)
 
+        # Apply Button
         self.button = customtkinter.CTkButton(
-            self.vertical_frame_2, width=75, text="Apply")
-        self.button.grid(column=1, row=0, pady=(0, 7.5))
-        self.button.bind("<Button-1>", command=self.proxy_changer)
+            self.horizontal_frame, width=50, text="Apply", command=self.proxy_changer)
+        self.button.grid(row=0, column=2, sticky="ew")
 
+        # Configure horizontal frame's columns to distribute space
+        self.horizontal_frame.grid_columnconfigure(
+            0, weight=3)
+        self.horizontal_frame.grid_columnconfigure(
+            1, weight=1)
+        self.horizontal_frame.grid_columnconfigure(
+            2, weight=1)
+
+        # Proxy ON/OFF Switch
         self.switch = customtkinter.CTkSwitch(
-            self.vertical_frame_1, text="Turn Proxy ON/OFF", progress_color="green", command=self.proxy_toggle)
-        self.switch.grid(column=0, row=1, sticky="w", pady=(7.5, 0))
+            master=self.frame, text="Turn Proxy ON/OFF", progress_color="green", command=self.proxy_toggle)
+        self.switch.grid(row=1, column=0, sticky="w", padx=5, pady=(10, 0))
 
+        # Status Label
         self.label = customtkinter.CTkLabel(
-            self.vertical_frame_2, text="Disabled", text_color="red")
-        self.label.grid(column=1, row=1, pady=(7.5, 0))
+            master=self.frame, text="Disabled", text_color="red")
+        self.label.grid(row=1, column=0, sticky="e", padx=15, pady=(10, 0))
 
         # check for software update
         self.check_update()
@@ -121,7 +139,7 @@ class RootApp(customtkinter.CTk):
         Args:
             event (Event, optional): The event that triggered this method. Defaults to None.
         """
-        proxy.change_address(self.entry.get())
+        proxy.change_address(f"{self.entry_ip.get()}:{self.entry_port.get()}")
 
     def proxy_toggle(self):
         """
