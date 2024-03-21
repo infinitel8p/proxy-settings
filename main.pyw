@@ -55,28 +55,18 @@ class RootApp(customtkinter.CTk):
         customtkinter.set_appearance_mode("dark")
         customtkinter.set_default_color_theme(
             os.path.join(theme_path, "lavender.json"))
-        self.geometry("330x330")
+        self.geometry("350x330")
         self.resizable(False, False)
 
-        self.version_label = customtkinter.CTkLabel(
-            self, text=f"version {version}", text_color="grey", font=("Arial", 10))
-        self.version_label.pack(side=customtkinter.BOTTOM)
+        # Create Tabview
+        self.tabview = customtkinter.CTkTabview(self, fg_color="transparent")
+        self.tabview.pack(fill="both", expand=True)
+        self.tabview.add("Proxy Settings")
+        self.tabview.add("Wifi Settings")
 
-        # Set up the log output widget
-        self.log_output = customtkinter.CTkTextbox(self)
-        self.log_output.pack(side=customtkinter.BOTTOM,
-                             fill=customtkinter.BOTH, expand=True, padx=5)
-
-        # Set up the logger
-        self.logger = logging.getLogger()
-        self.logger.setLevel(logging.INFO)
-        # Add the TkinterHandler to the logger
-        self.handler = TkinterHandler(self.log_output)
-        self.logger.addHandler(self.handler)
-
-        # Create the main frame for widgets
+        # Create the main frames for widgets
         self.frame = customtkinter.CTkFrame(
-            master=self, fg_color="transparent")
+            master=self.tabview.tab("Proxy Settings"), fg_color="transparent")
         self.frame.pack(pady=15, padx=15, fill="both", expand=True)
 
         self.horizontal_frame = customtkinter.CTkFrame(
@@ -122,6 +112,23 @@ class RootApp(customtkinter.CTk):
         self.label = customtkinter.CTkLabel(
             master=self.frame, text="Disabled", text_color="red")
         self.label.grid(row=1, column=0, sticky="e", padx=15, pady=(10, 0))
+
+        # Set up the log output widget
+        self.log_output = customtkinter.CTkTextbox(
+            self.tabview.tab("Proxy Settings"), height=150)
+        self.log_output.pack(side=customtkinter.BOTTOM,
+                             fill=customtkinter.BOTH, expand=True, padx=5)
+
+        # Set up the logger
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.INFO)
+        # Add the TkinterHandler to the logger
+        self.handler = TkinterHandler(self.log_output)
+        self.logger.addHandler(self.handler)
+
+        self.version_label = customtkinter.CTkLabel(
+            self, text=f"version {version}", text_color="grey", font=("Arial", 10))
+        self.version_label.pack(side=customtkinter.BOTTOM)
 
         # check for software update
         self.check_update()
