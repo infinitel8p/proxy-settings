@@ -136,17 +136,17 @@ def server_check():
     except:
         # create missing reg key with placeholder address
         logger.warning("No Proxy Server found!")
-        logger.info("Creating REG_SZ key, setting proxy address...")
+        logger.info("Creating REG_SZ key...")
+        logger.info("Setting proxy address...")
         create_proxy_regsz = subprocess.Popen(
             r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f',
             shell=True, stdout=subprocess.PIPE)
-        create_proxy_regsz_return = create_proxy_regsz.stdout.read()
-        create_proxy_regsz_return = create_proxy_regsz_return.decode(
-            "utf-8").split()
+        create_proxy_regsz_return = create_proxy_regsz.stdout.read().decode("utf-8").split()
         logger.info(" ".join(create_proxy_regsz_return))
         logger.info("Set Proxy address to: 0.0.0.0:0")
 
         # try to read the value again
+        logging.info("Confirming Proxy Server...")
         regkey_check2 = subprocess.Popen(
             proxy_server_query, shell=True, stdout=subprocess.PIPE)
         regkey_check_return2 = regkey_check2.stdout.read().split()
