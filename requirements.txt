@@ -1,3 +1,5 @@
 customtkinter
 pywin32
 requests
+pywifi
+comtypes
