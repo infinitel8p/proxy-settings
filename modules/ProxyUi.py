@@ -66,7 +66,8 @@ class ProxyUi(customtkinter.CTkFrame):
         self.version_label.pack(side=customtkinter.BOTTOM)
 
         # Set up the log output widget
-        self.log_output = customtkinter.CTkTextbox(self, height=150)
+        self.log_output = customtkinter.CTkTextbox(
+            self, height=150, fg_color="gray17", font=("Arial", 10))
         self.log_output.pack(side=customtkinter.BOTTOM,
                              fill=customtkinter.BOTH, expand=True, padx=5)
 

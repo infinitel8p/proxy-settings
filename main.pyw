@@ -83,18 +83,18 @@ class RootApp(customtkinter.CTk):
                     sys.exit()
         except (KeyError, IndexError):
             # If there is an error in the response, print an error message
-            logging.info(
-                "Error: Failed to retrieve version information from GitHub.")
+            logging.error(
+                "Failed to retrieve version information from GitHub.")
         except requests.exceptions.HTTPError as errh:
-            logging.info(f"HTTP Error: {errh}")
+            logging.error(f"HTTP Error: {errh}")
         except requests.exceptions.ConnectionError as errc:
-            logging.info(f"Error Connecting: {errc}")
+            logging.error(f"Error Connecting: {errc}")
         except requests.exceptions.Timeout as errt:
-            logging.info(f"Timeout Error: {errt}")
+            logging.error(f"Timeout Error: {errt}")
         except requests.exceptions.RequestException as err:
-            logging.info(f"Something Else: {err}")
+            logging.error(f"Something Else: {err}")
         except Exception as e:
-            logging.info(f"An unexpected error occurred: {e}")
+            logging.error(f"An unexpected error occurred: {e}")
 
 
 if __name__ == "__main__":
