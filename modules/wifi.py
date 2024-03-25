@@ -9,6 +9,10 @@ from pywifi import PyWiFi, const, Profile
 logging.getLogger('pywifi').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+startupinfo.wShowWindow = subprocess.SW_HIDE
+
 
 def get_connected_ssid():
     """
@@ -22,13 +26,12 @@ def get_connected_ssid():
         str: The SSID of the currently connected WiFi network, or None if the device is not connected to any network.
     """
 
-    # Function to get the SSID of the currently connected Wi-Fi network
-    command = "netsh wlan show interfaces"
+    command = ["netsh", "wlan", "show", "interfaces"]
     try:
+        result = subprocess.run(command, check=True, text=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='cp850', startupinfo=startupinfo)
 
-        result = subprocess.check_output(
-            command, shell=True, text=True, stderr=subprocess.STDOUT, encoding='cp850')
-        for line in result.split('\n'):
+        for line in result.stdout.split('\n'):
             if "SSID" in line and "BSSID" not in line:
                 return re.findall(r':\s*(.*)', line)[0].strip()
     except subprocess.CalledProcessError as e:
@@ -52,7 +55,7 @@ def scan_wifi_networks():
 
     # Run the "netsh" command to list the available Wi-Fi networks
     result = subprocess.run(['netsh', 'wlan', 'show', 'networks', 'mode=Bssid'],
-                            capture_output=True, text=True, encoding='cp850')  # Using cp850 encoding for Windows console output - may need to adjust for other systems (e.g., utf-8)
+                            capture_output=True, text=True, encoding='cp850', startupinfo=startupinfo)  # Using cp850 encoding for Windows console output - may need to adjust for other systems (e.g., utf-8)
 
     # Parse the output to extract the SSIDs, signal strengths, and authentication types of the available networks
     networks = []

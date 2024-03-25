@@ -9,6 +9,9 @@ proxy_status_query = r'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion
 deactivate_proxy = r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
 activate_proxy = r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 1 /f'
 
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+startupinfo.wShowWindow = subprocess.SW_HIDE
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +87,7 @@ def change_address(new_address):
         new_address (str): The new proxy server address in the format "ip:port".
     """
     subprocess.run(
-        fr'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True)
+        fr'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True, startupinfo=startupinfo)
     logger.info(f"Changed proxy address to {new_address}")
 
 
@@ -132,7 +135,7 @@ def status_check():
     global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
-        proxy_status_query, shell=True, stdout=subprocess.PIPE)
+        proxy_status_query, shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
     regkey_check_return = regkey_check.stdout.read().split()
 
     if regkey_check_return[-1] == b'0x0':
@@ -157,7 +160,7 @@ def server_check():
     global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
-        proxy_server_query, shell=True, stdout=subprocess.PIPE)
+        proxy_server_query, shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
     regkey_check_return = regkey_check.stdout.read().split()
 
     # try to convert outputted bytes to string
@@ -180,7 +183,7 @@ def server_check():
         logger.info("Setting proxy address...")
         create_proxy_regsz = subprocess.Popen(
             r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f',
-            shell=True, stdout=subprocess.PIPE)
+            shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
         create_proxy_regsz_return = create_proxy_regsz.stdout.read().decode("utf-8").split()
         logger.info(" ".join(create_proxy_regsz_return))
         logger.info("Set Proxy address to: 0.0.0.0:0")
@@ -188,7 +191,7 @@ def server_check():
         # try to read the value again
         logging.info("Confirming Proxy Server...")
         regkey_check2 = subprocess.Popen(
-            proxy_server_query, shell=True, stdout=subprocess.PIPE)
+            proxy_server_query, shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
         regkey_check_return2 = regkey_check2.stdout.read().split()
 
         # convert outputted bytes to string
