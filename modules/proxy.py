@@ -14,8 +14,23 @@ logger = logging.getLogger(__name__)
 
 
 def activate():
-    """Activates the proxy by modifying the registry key value for the proxy.
     """
+    Activates the proxy by modifying the system's registry key value for the proxy settings.
+
+    This function attempts to run a command line instruction to activate proxy settings through a registry modification.
+    It requires administrative privileges, hence the use of 'runas' to elevate the command prompt session. If the user cancels
+    the operation or if any other error occurs, the function logs the event and returns False. On successful activation,
+    it logs the success and returns True.
+
+    Returns:
+        True if the proxy was successfully activated, False if the activation was cancelled by the user or an error occurred.
+
+    Notes:
+        - The actual command to activate the proxy is stored in the 'activate_proxy' variable.
+        - This function requires the 'pywintypes' and 'shell' modules, with 'shell' being an instance of 'win32com.shell.shell'.
+        - Errors, including cancellation by the user, are logged.
+    """
+
     try:
         shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                              lpParameters='/c ' + activate_proxy)
@@ -31,8 +46,22 @@ def activate():
 
 
 def deactivate():
-    """Deactivates the proxy by modifying the registry key value for the proxy.
     """
+    Deactivates the proxy by modifying the system's registry key value for the proxy settings.
+
+    Similar to the activate function, this function runs a command line instruction to deactivate the proxy settings
+    via a registry modification. Administrative privileges are required, and the function handles user cancellation
+    and other errors by logging them and returning False. On successful deactivation, it logs this and returns True.
+
+    Returns:
+        True if the proxy was successfully deactivated, False if the deactivation was cancelled by the user or an error occurred.
+
+    Notes:
+        - The actual command to activate the proxy is stored in the 'deactivate_proxy' variable.
+        - Requires 'pywintypes' and 'shell' modules, with 'shell' being an instance of 'win32com.shell.shell'.
+        - Errors, including cancellation by the user, are logged.
+    """
+
     try:
         shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                              lpParameters='/c ' + deactivate_proxy)
@@ -48,10 +77,11 @@ def deactivate():
 
 
 def change_address(new_address):
-    """Changes the proxy address by modifying the registry key value.
+    """
+    Changes the proxy address in the Windows Registry to the specified new address.
 
     Args:
-        new_address (str): The new proxy address to be set.
+        new_address (str): The new proxy server address in the format "ip:port".
     """
     subprocess.run(
         fr'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True)
@@ -59,11 +89,12 @@ def change_address(new_address):
 
 
 def fill_in_ip():
-    """Gets the current proxy address and returns it to be set in the entry widget of the main program.
-    If no proxy address has been set it returns `0.0.0.0`
+    """
+    Retrieves the current proxy IP address from the Windows Registry.
+    If no proxy address has been set, it returns '0.0.0.0'.
 
     Returns:
-        str: current proxy IP address
+        str: The current proxy IP address or '0.0.0.0' if unset.
     """
     try:
         value = subprocess.check_output(
@@ -75,10 +106,12 @@ def fill_in_ip():
 
 
 def fill_in_port():
-    """Gets the current proxy port address and returns it to be set in the entry widget of the main program.
-    If no port address has been set it returns 8080`
+    """
+    Retrieves the current proxy port from the Windows Registry.
+    If no port address has been set, it returns '8080'.
+
     Returns:
-        str: current proxy port
+        str: The current proxy port or '8080' if unset.
     """
     try:
         value = subprocess.check_output(
@@ -90,11 +123,11 @@ def fill_in_port():
 
 
 def status_check():
-    """Checks if the proxy is enabled and returns `True` or `False` so the indicator switch can be
-    set in the main program.
+    """
+    Checks if the proxy is currently enabled by querying the Windows Registry.
 
     Returns:
-        bool: current proxy status
+        bool: True if the proxy is enabled, False otherwise.
     """
     global logger
     # check current regkey value for proxy
@@ -114,6 +147,13 @@ def status_check():
 
 
 def server_check():
+    """
+    Checks and logs the current proxy server settings from the Windows Registry.
+    If no proxy server is configured, it attempts to set a placeholder value and rechecks.
+
+    Returns:
+        str: The current proxy server address or a placeholder if initially unset.
+    """
     global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(
@@ -136,17 +176,17 @@ def server_check():
     except:
         # create missing reg key with placeholder address
         logger.warning("No Proxy Server found!")
-        logger.info("Creating REG_SZ key, setting proxy address...")
+        logger.info("Creating REG_SZ key...")
+        logger.info("Setting proxy address...")
         create_proxy_regsz = subprocess.Popen(
             r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f',
             shell=True, stdout=subprocess.PIPE)
-        create_proxy_regsz_return = create_proxy_regsz.stdout.read()
-        create_proxy_regsz_return = create_proxy_regsz_return.decode(
-            "utf-8").split()
+        create_proxy_regsz_return = create_proxy_regsz.stdout.read().decode("utf-8").split()
         logger.info(" ".join(create_proxy_regsz_return))
         logger.info("Set Proxy address to: 0.0.0.0:0")
 
         # try to read the value again
+        logging.info("Confirming Proxy Server...")
         regkey_check2 = subprocess.Popen(
             proxy_server_query, shell=True, stdout=subprocess.PIPE)
         regkey_check_return2 = regkey_check2.stdout.read().split()

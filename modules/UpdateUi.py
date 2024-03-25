@@ -11,7 +11,6 @@ import os
 class UpdateUi(customtkinter.CTkToplevel):
     """This class is used to create a pop-up window to inform the user that a new version of the application is available and ask if they want to update.
     Attributes:
-        hotkeys (list): List of hotkeys associated with the window
         updating (bool): A flag to indicate whether the update process is currently in progress
         parent (customtkinter.CTkToplevel): The parent window of this class
         background (CTkFrame): The background frame of the window
@@ -35,7 +34,6 @@ class UpdateUi(customtkinter.CTkToplevel):
 
         # Main Frame
         super().__init__(parent)
-        self.hotkeys = []
         self.wm_title("Update Required")
         self.attributes("-topmost", True)
         self.attributes("-toolwindow", 1)
@@ -101,43 +99,63 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.output.pack(padx=5, pady=5, fill=customtkinter.BOTH, expand=True)
         self.output.configure(state='disabled')
 
-        self.add_output("Downloading update...\n\n")
+        self.add_output("Prepairing update...\n\n")
         time.sleep(0.5)
 
-        # Get the path of the user's temporary directory
+        # Prepare download directory
         temp_dir = tempfile.gettempdir()
-        # create folder if it does not exist
         download_path = os.path.join(os.path.join(os.path.join(
             temp_dir, "Proxy Settings"), "Updates"), f"Update {self.parent.latest_version}")
         if not os.path.exists(download_path):
             os.makedirs(download_path)
 
+        self.add_output(f"Download directory created at:\n{download_path}\n\n")
+
         url = "https://api.github.com/repos/infinitel8p/proxy-settings/releases"
         try:
-            # Send a GET request to the GitHub releases API
+            # Fetch release information
             releases_response = requests.get(url)
             releases_data = json.loads(releases_response.text)
-            # get assets url
-            assets_response = requests.get(
-                (releases_data[0]["assets_url"]))
+            assets_response = requests.get((releases_data[0]["assets_url"]))
             assets_data = json.loads(assets_response.text)
-            # download asset
-            assets_dl_link = requests.get(
-                (assets_data[0]["browser_download_url"]))
-        except (KeyError, IndexError):
-            # If there is an error in the response, print an error message
-            self.add_output(
-                "Error: Failed to retrieve update information from GitHub.\n\nClosing setup in 5 sek...")
+            download_url = assets_data[0]["browser_download_url"]
+
+            # Prepare for downloading
+            response = requests.get(download_url, stream=True)
+            total_length = response.headers.get('content-length')
+
+            if total_length is None:  # No content length header
+                self.add_output(
+                    "Cannot determine file size for progress tracking.\n\n")
+                open(os.path.join(download_path, "Proxy Settings.exe"),
+                     'wb').write(response.content)
+            else:
+                # Create and display the progress bar
+                total_length = int(total_length)
+                downloaded = 0
+                self.progress_bar = customtkinter.CTkProgressBar(
+                    self.background)
+                self.progress_bar.pack(padx=5, pady=(
+                    0, 5), fill=customtkinter.X, expand=True)
+                self.add_output("Downloading new release...\n\n")
+
+                # Download with progress update
+                with open(os.path.join(download_path, "Proxy Settings.exe"), 'wb') as f:
+                    for data in response.iter_content(chunk_size=4096):
+                        downloaded += len(data)
+                        f.write(data)
+                        self.progress_bar.set(downloaded / total_length)
+                        self.background.update_idletasks()  # Update the UI to reflect progress
+
+            # log successful download of new .exe
+            self.add_output(f"Downloaded update to:\n{download_path}\n\n")
             time.sleep(0.5)
+
+        except (KeyError, IndexError, requests.exceptions.RequestException) as e:
+            self.add_output(
+                f"Error during download: {e}\n\nClosing setup in 5 sec...")
+            time.sleep(5)
             self.destroy()
-
-        open(os.path.join(download_path, "Proxy Settings.exe"),
-             "wb").write(assets_dl_link.content)
-
-        # log successful download of new .exe
-        self.add_output(
-            f"Downloaded update to:\n{download_path}\n\n")
-        time.sleep(0.5)
 
         # log creation of updater files
         self.add_output("Creating update handlers...\n\n")
