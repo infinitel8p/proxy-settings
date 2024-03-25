@@ -10,42 +10,60 @@ for handler in logging.root.handlers[:]:
 
 # Now, configure the basic logging again
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
+logging.getLogger('pywifi').setLevel(logging.WARNING)
 
 
-def connect_to_wifi(ssid, password):
+def connect_to_wifi(ssid, password=None):
     wifi = PyWiFi()
     iface = wifi.interfaces()[0]  # Select the first wireless interface
 
-    # Remove all existing profiles for the SSID to ensure a clean state
+    # Check if already connected
+    if is_already_connected(ssid):
+        logging.info(f"Already connected to {ssid}.")
+        return
+
+    # Check if the network is known (saved)
+    profile = find_network_profile(iface, ssid)
+    if not profile:
+        # It's a new network, prompt for password
+        password = input(f"Enter password for {ssid}: ")
+
+    # If profile exists but no password was provided, try to connect using the existing profile
+    if profile and not password:
+        logging.info(f"Trying to connect to known network {ssid}...")
+        iface.connect(profile)
+    else:
+        # Connect with a new profile or provided password
+        profile = create_profile(ssid, password)
+        temp_profile = iface.add_network_profile(profile)
+        iface.connect(temp_profile)
+
+    result = wait_for_connection(iface)
+    if result == "Connected":
+        logging.info(f"Successfully connected to {ssid}")
+    elif result == "Timeout":
+        logging.warning(
+            "Connection attempt timed out. Please check the network status and password.")
+    else:
+        logging.error("Failed to connect for an unknown reason.")
+
+
+def find_network_profile(iface, ssid):
     existing_profiles = iface.network_profiles()
     for profile in existing_profiles:
         if profile.ssid == ssid:
-            iface.remove_network_profile(profile)
+            return profile
+    return None
 
-    # Create a WiFi profile for the network
+
+def create_profile(ssid, password):
     profile = Profile()
     profile.ssid = ssid
     profile.auth = const.AUTH_ALG_OPEN
     profile.akm.append(const.AKM_TYPE_WPA2PSK)
     profile.cipher = const.CIPHER_TYPE_CCMP
     profile.key = password
-
-    # Add the profile to the interface
-    temp_profile = iface.add_network_profile(profile)
-
-    logging.info("Attempting to connect...")
-    iface.connect(temp_profile)
-    logging.info("Connection attempt initiated.")
-
-    logging.info("Waiting for connection...")
-    result = wait_for_connection(iface)
-    if result == "Connected":
-        logging.info(f"Successfully connected to {ssid}")
-    elif result == "Timeout":
-        logging.warning(
-            "Failed to connect. Timeout reached, please check the password or network status.")
-    else:
-        logging.error("Failed to connect for an unknown reason.")
+    return profile
 
 
 def get_connected_ssid():
@@ -78,11 +96,5 @@ def wait_for_connection(iface, timeout=10):
 
 
 if __name__ == "__main__":
-    ssid = ''
-    password = ''
-
-    if is_already_connected(ssid):
-        logging.info(
-            f"Already connected to {ssid}. Skipping connection attempt.")
-    else:
-        connect_to_wifi(ssid, password)
+    ssid = ''  # Enter the SSID
+    connect_to_wifi(ssid)
