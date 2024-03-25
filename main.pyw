@@ -2,7 +2,6 @@ from packaging.version import Version
 from modules.UpdateUi import UpdateUi
 from modules.WifiUi import WifiUi
 from modules.ProxyUi import ProxyUi
-from modules import proxy
 import customtkinter
 import requests
 import logging
