@@ -14,8 +14,23 @@ logger = logging.getLogger(__name__)
 
 
 def activate():
-    """Activates the proxy by modifying the registry key value for the proxy.
     """
+    Activates the proxy by modifying the system's registry key value for the proxy settings.
+
+    This function attempts to run a command line instruction to activate proxy settings through a registry modification.
+    It requires administrative privileges, hence the use of 'runas' to elevate the command prompt session. If the user cancels
+    the operation or if any other error occurs, the function logs the event and returns False. On successful activation,
+    it logs the success and returns True.
+
+    Returns:
+        True if the proxy was successfully activated, False if the activation was cancelled by the user or an error occurred.
+
+    Notes:
+        - The actual command to activate the proxy is stored in the 'activate_proxy' variable.
+        - This function requires the 'pywintypes' and 'shell' modules, with 'shell' being an instance of 'win32com.shell.shell'.
+        - Errors, including cancellation by the user, are logged.
+    """
+
     try:
         shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                              lpParameters='/c ' + activate_proxy)
@@ -31,8 +46,22 @@ def activate():
 
 
 def deactivate():
-    """Deactivates the proxy by modifying the registry key value for the proxy.
     """
+    Deactivates the proxy by modifying the system's registry key value for the proxy settings.
+
+    Similar to the activate function, this function runs a command line instruction to deactivate the proxy settings
+    via a registry modification. Administrative privileges are required, and the function handles user cancellation
+    and other errors by logging them and returning False. On successful deactivation, it logs this and returns True.
+
+    Returns:
+        True if the proxy was successfully deactivated, False if the deactivation was cancelled by the user or an error occurred.
+
+    Notes:
+        - The actual command to activate the proxy is stored in the 'deactivate_proxy' variable.
+        - Requires 'pywintypes' and 'shell' modules, with 'shell' being an instance of 'win32com.shell.shell'.
+        - Errors, including cancellation by the user, are logged.
+    """
+
     try:
         shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
                              lpParameters='/c ' + deactivate_proxy)
@@ -48,7 +77,8 @@ def deactivate():
 
 
 def change_address(new_address):
-    """Changes the proxy address in the Windows Registry to the specified new address.
+    """
+    Changes the proxy address in the Windows Registry to the specified new address.
 
     Args:
         new_address (str): The new proxy server address in the format "ip:port".
@@ -59,7 +89,8 @@ def change_address(new_address):
 
 
 def fill_in_ip():
-    """Retrieves the current proxy IP address from the Windows Registry.
+    """
+    Retrieves the current proxy IP address from the Windows Registry.
     If no proxy address has been set, it returns '0.0.0.0'.
 
     Returns:
@@ -75,7 +106,8 @@ def fill_in_ip():
 
 
 def fill_in_port():
-    """Retrieves the current proxy port from the Windows Registry.
+    """
+    Retrieves the current proxy port from the Windows Registry.
     If no port address has been set, it returns '8080'.
 
     Returns:
@@ -91,7 +123,8 @@ def fill_in_port():
 
 
 def status_check():
-    """Checks if the proxy is currently enabled by querying the Windows Registry.
+    """
+    Checks if the proxy is currently enabled by querying the Windows Registry.
 
     Returns:
         bool: True if the proxy is enabled, False otherwise.
@@ -114,7 +147,8 @@ def status_check():
 
 
 def server_check():
-    """Checks and logs the current proxy server settings from the Windows Registry.
+    """
+    Checks and logs the current proxy server settings from the Windows Registry.
     If no proxy server is configured, it attempts to set a placeholder value and rechecks.
 
     Returns:

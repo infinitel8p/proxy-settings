@@ -10,6 +10,19 @@ logger = logging.getLogger(__name__)
 
 
 def scan_wifi_networks():
+    """
+    Scans for available WiFi networks and returns their details.
+
+    This function uses the `netsh` command to list available Wi-Fi networks and parses its output
+    to extract SSIDs, signal strengths, and authentication types of the networks. The networks are then sorted
+    by signal strength in descending order.
+
+    Returns:
+        A list of dictionaries, where each dictionary represents a WiFi network with keys 'ssid', 'signal', and 'auth'.
+        'signal' is an integer representing the signal strength percentage, 'ssid' is the name of the network,
+        and 'auth' is the authentication type. If 'auth' or 'ssid' could not be determined, they are set to 'Unknown'.
+    """
+
     # Run the "netsh" command to list the available Wi-Fi networks
     result = subprocess.run(['netsh', 'wlan', 'show', 'networks', 'mode=Bssid'],
                             capture_output=True, text=True, encoding='cp850')  # Using cp850 encoding for Windows console output - may need to adjust for other systems (e.g., utf-8)
@@ -48,6 +61,23 @@ def scan_wifi_networks():
 
 
 def connect_to_wifi(ssid, password=None):
+    """
+    Attempts to connect to a specified WiFi network.
+
+    This function handles the connection process to a WiFi network specified by the SSID. It checks if the device
+    is already connected to the target network, searches for a known network profile, and either connects using an existing
+    profile or prompts for a password to create a new profile. The connection result is logged.
+
+    Parameters:
+        ssid (str): The SSID of the WiFi network to connect to.
+        password (str, optional): The password for the WiFi network. If not provided and the network is not known,
+                                the user will be prompted to enter a password.
+
+    Notes:
+        - The function logs information about the connection process, including success, timeout, and failure messages.
+        - If connecting to a network that requires a password not provided in the call, the function will prompt the user to input it.
+    """
+
     wifi = PyWiFi()
     iface = wifi.interfaces()[0]  # Select the first wireless interface
 
@@ -83,6 +113,17 @@ def connect_to_wifi(ssid, password=None):
 
 
 def find_network_profile(iface, ssid):
+    """
+    Searches for an existing network profile by SSID on the given wireless interface.
+
+    Parameters:
+        iface: The wireless interface object from PyWiFi.
+        ssid (str): The SSID of the WiFi network to search for.
+
+    Returns:
+        The network profile matching the SSID if found, None otherwise.
+    """
+
     existing_profiles = iface.network_profiles()
     for profile in existing_profiles:
         if profile.ssid == ssid:
@@ -91,6 +132,19 @@ def find_network_profile(iface, ssid):
 
 
 def create_profile(ssid, password):
+    """
+    Creates a new profile for connecting to a WiFi network.
+
+    This function sets up a profile with the given SSID and password, configuring it for WPA2-PSK authentication by default.
+
+    Parameters:
+        ssid (str): The SSID of the WiFi network.
+        password (str): The password for the WiFi network.
+
+    Returns:
+        A PyWiFi Profile object configured for the specified network.
+    """
+
     profile = Profile()
     profile.ssid = ssid
     profile.auth = const.AUTH_ALG_OPEN
@@ -101,6 +155,15 @@ def create_profile(ssid, password):
 
 
 def get_connected_ssid():
+    """
+    Retrieves the SSID of the currently connected WiFi network.
+
+    Uses the `netsh wlan show interfaces` command to find the currently connected network's SSID.
+
+    Returns:
+        The SSID of the currently connected network, or None if the SSID could not be determined or if not connected to any network.
+    """
+
     # Get the currently connected SSID
     command = "netsh wlan show interfaces"
     try:
@@ -116,11 +179,35 @@ def get_connected_ssid():
 
 
 def is_already_connected(ssid):
+    """
+    Checks if the device is already connected to a specified WiFi network.
+
+    Parameters:
+        ssid (str): The SSID of the WiFi network to check against the currently connected network.
+
+    Returns:
+        True if the device is currently connected to the network specified by the SSID, False otherwise.
+    """
+
     connected_ssid = get_connected_ssid()
     return connected_ssid == ssid
 
 
 def wait_for_connection(iface, timeout=10):
+    """
+    Waits for a connection to be established to a WiFi network.
+
+    This function waits for up to a specified timeout for the device to connect to a WiFi network,
+    checking the connection status at 1-second intervals.
+
+    Parameters:
+        iface: The wireless interface object from PyWiFi.
+        timeout (int, optional): The maximum time to wait for a connection, in seconds. Default is 10 seconds.
+
+    Returns:
+        A string indicating the connection result, either "Connected" or "Timeout".
+    """
+
     start_time = time.time()
     while time.time() - start_time < timeout:
         if iface.status() == const.IFACE_CONNECTED:

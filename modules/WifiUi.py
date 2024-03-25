@@ -26,10 +26,25 @@ class WifiUi(customtkinter.CTkFrame):
         self.start_wifi_scanning()
 
     def start_wifi_scanning(self):
+        """
+        Starts the WiFi scanning process.
+
+        This method initializes the process to update the list of available WiFi networks and the timer for refresh intervals.
+        It calls `update_wifi_list` to populate the list of WiFi networks and `update_timer` to start the countdown for the refresh.
+        """
+
         self.update_wifi_list()
         self.update_timer()
 
     def update_timer(self):
+        """
+        Updates the countdown timer for the next WiFi list refresh.
+
+        This method decrements the countdown time every second and updates the timer label with the remaining time.
+        Once the countdown reaches 0, the label is updated to indicate that a refresh is happening. The method
+        schedules itself to be called every 1 second until the countdown reaches 0, at which point it resets the label and stops updating.
+        """
+
         # Decrement the timer and update the label
         self.countdown_time -= 1
         self.timer_label.configure(
@@ -43,6 +58,14 @@ class WifiUi(customtkinter.CTkFrame):
             self.timer_label.configure(text="Refreshing...")
 
     def update_wifi_list(self):
+        """
+        Updates the list of available WiFi networks displayed to the user.
+
+        This method resets the countdown timer for refreshing the WiFi list, clears any existing network frames from the previous scan,
+        and performs a new scan for WiFi networks. For each network found, it creates a new frame and populates it with the network's details
+        and a connect button. It schedules `start_wifi_scanning` to be called again after the refresh interval to update the list regularly.
+        """
+
         self.countdown_time = self.refresh_interval // 1000
 
         # Clear existing network frames
