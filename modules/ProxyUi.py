@@ -78,6 +78,12 @@ class ProxyUi(customtkinter.CTkFrame):
         self.handler = TkinterHandler(self.log_output)
         self.logger.addHandler(self.handler)
 
+        # check current settings and set switch/label
+        if proxy.status_check():
+            self.switch.select()
+            self.label.configure(text="Enabled", text_color="green")
+        proxy.server_check()
+
     def proxy_changer(self, event=None):
         """
         Changes the proxy address to the value entered in the Tkinter Entry widget.

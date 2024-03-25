@@ -9,7 +9,7 @@ import logging
 import json
 import os
 
-version = "1.2"
+version = "1.3"
 
 # set image path
 image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
@@ -51,12 +51,6 @@ class RootApp(customtkinter.CTk):
 
         # check for software update
         self.check_update()
-
-        # check current settings and set switch/label
-        if proxy.status_check():
-            self.switch.select()
-            self.label.configure(text="Enabled", text_color="green")
-        proxy.server_check()
 
     def check_update(self, version=version):
         """Checks for new releases on Github. If a new release is available, it downloads and 'installs' it.
