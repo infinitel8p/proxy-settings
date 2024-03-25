@@ -25,7 +25,7 @@ def get_connected_ssid():
     # Function to get the SSID of the currently connected Wi-Fi network
     command = "netsh wlan show interfaces"
     try:
-        
+
         result = subprocess.check_output(
             command, shell=True, text=True, stderr=subprocess.STDOUT, encoding='cp850')
         for line in result.split('\n'):
@@ -34,6 +34,7 @@ def get_connected_ssid():
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to get connected SSID: {e.output}")
     return None
+
 
 def scan_wifi_networks():
     """
@@ -121,9 +122,11 @@ def connect_to_wifi(ssid, wifi_ui, password=None):
     profile = find_network_profile(iface, ssid)
     if not profile:
         # It's a new network, prompt for password
-        dialog = customtkinter.CTkInputDialog(text=f"Enter password for {ssid}:", title="Password required")
+        dialog = customtkinter.CTkInputDialog(
+            text=f"Enter password for {ssid}:", title="Password required")
         from tkinter import PhotoImage
-        dialog.iconphoto(True, PhotoImage(file=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "images", "verbindung.png")))
+        dialog.iconphoto(True, PhotoImage(file=os.path.join(os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))), "images", "verbindung.png")))
 
         password = dialog.get_input()
         if password == None:
@@ -148,7 +151,7 @@ def connect_to_wifi(ssid, wifi_ui, password=None):
             "Connection attempt timed out. Please check the network status and password.")
     else:
         logger.error("Failed to connect for an unknown reason.")
-    
+
     wifi_ui.master.master.set("Proxy Settings")
 
 
@@ -172,8 +175,9 @@ def disconnect_from_wifi(ssid, wifi_ui):
         logger.info(f"Disconnected from {ssid}")
     else:
         logger.info(f"Not connected to {ssid}")
-    
-    wifi_ui.master.master.set("Proxy Settings")   
+
+    wifi_ui.master.master.set("Proxy Settings")
+
 
 def find_network_profile(iface, ssid):
     """
