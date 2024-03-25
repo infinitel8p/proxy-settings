@@ -8,7 +8,7 @@ import logging
 import json
 import os
 
-version = "1.3"
+version = "1.4"
 
 # set image path
 image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
