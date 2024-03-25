@@ -1,5 +1,7 @@
 from packaging.version import Version
 from modules.UpdateUi import UpdateUi
+from modules.WifiUi import WifiUi
+from modules.ProxyUi import ProxyUi
 from modules import proxy
 import customtkinter
 import requests
@@ -14,29 +16,6 @@ image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 theme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "themes")
 
 # Create a handler to display log messages in the GUI
-
-
-class TkinterHandler(logging.Handler):
-    """
-    A logging handler that outputs logs to a Tkinter Text widget.
-
-    Args:
-        text_widget (customtkinter.CTkTextbox): The Text widget to output logs to.
-    """
-
-    def __init__(self, text_widget):
-        logging.Handler.__init__(self)
-        self.text_widget = text_widget
-        self.text_widget.configure(state='disabled')
-        self.log_format = logging.Formatter('%(levelname)s: %(message)s\n')
-
-    def emit(self, record):
-        self.text_widget.configure(state='normal')
-        self.text_widget.insert(
-            customtkinter.END, self.log_format.format(record))
-        self.text_widget.see(customtkinter.END)
-        self.text_widget.configure(state='disabled')
-        self.text_widget.update()
 
 
 class RootApp(customtkinter.CTk):
@@ -64,71 +43,11 @@ class RootApp(customtkinter.CTk):
         self.tabview.add("Proxy Settings")
         self.tabview.add("Wifi Settings")
 
-        # Create the main frames for widgets
-        self.frame = customtkinter.CTkFrame(
-            master=self.tabview.tab("Proxy Settings"), fg_color="transparent")
-        self.frame.pack(pady=15, padx=15, fill="both", expand=True)
+        self.proxy_ui = ProxyUi(self.tabview.tab("Proxy Settings"), version)
+        self.proxy_ui.pack(fill="both", expand=True)
 
-        self.horizontal_frame = customtkinter.CTkFrame(
-            master=self.frame, fg_color="transparent")
-        self.horizontal_frame.grid(
-            row=0, column=0, sticky="ew", padx=5, pady=5)
-        self.frame.grid_columnconfigure(
-            0, weight=1)
-
-        # Proxy Address Entry
-        self.entry_ip = customtkinter.CTkEntry(
-            self.horizontal_frame, width=75, justify="center", placeholder_text="Proxy ip-address")
-        self.entry_ip.grid(row=0, column=0, sticky="ew", padx=(0, 5))
-        self.entry_ip.insert(0, proxy.fill_in_ip())
-        self.entry_ip.bind("<Return>", command=self.proxy_changer)
-
-        # Proxy Port Entry
-        self.entry_port = customtkinter.CTkEntry(
-            self.horizontal_frame, width=50, justify="center", placeholder_text="Proxy port")
-        self.entry_port.grid(row=0, column=1, sticky="ew", padx=(0, 5))
-        self.entry_port.insert(0, proxy.fill_in_port())
-        self.entry_port.bind("<Return>", command=self.proxy_changer)
-
-        # Apply Button
-        self.button = customtkinter.CTkButton(
-            self.horizontal_frame, width=50, text="Apply", command=self.proxy_changer)
-        self.button.grid(row=0, column=2, sticky="ew")
-
-        # Configure horizontal frame's columns to distribute space
-        self.horizontal_frame.grid_columnconfigure(
-            0, weight=3)
-        self.horizontal_frame.grid_columnconfigure(
-            1, weight=1)
-        self.horizontal_frame.grid_columnconfigure(
-            2, weight=1)
-
-        # Proxy ON/OFF Switch
-        self.switch = customtkinter.CTkSwitch(
-            master=self.frame, text="Turn Proxy ON/OFF", progress_color="green", command=self.proxy_toggle)
-        self.switch.grid(row=1, column=0, sticky="w", padx=5, pady=(10, 0))
-
-        # Status Label
-        self.label = customtkinter.CTkLabel(
-            master=self.frame, text="Disabled", text_color="red")
-        self.label.grid(row=1, column=0, sticky="e", padx=15, pady=(10, 0))
-
-        # Set up the log output widget
-        self.log_output = customtkinter.CTkTextbox(
-            self.tabview.tab("Proxy Settings"), height=150)
-        self.log_output.pack(side=customtkinter.BOTTOM,
-                             fill=customtkinter.BOTH, expand=True, padx=5)
-
-        # Set up the logger
-        self.logger = logging.getLogger()
-        self.logger.setLevel(logging.INFO)
-        # Add the TkinterHandler to the logger
-        self.handler = TkinterHandler(self.log_output)
-        self.logger.addHandler(self.handler)
-
-        self.version_label = customtkinter.CTkLabel(
-            self, text=f"version {version}", text_color="grey", font=("Arial", 10))
-        self.version_label.pack(side=customtkinter.BOTTOM)
+        self.wifi_ui = WifiUi(self.tabview.tab("Wifi Settings"))
+        self.wifi_ui.pack(fill="both", expand=True)
 
         # check for software update
         self.check_update()
@@ -138,35 +57,6 @@ class RootApp(customtkinter.CTk):
             self.switch.select()
             self.label.configure(text="Enabled", text_color="green")
         proxy.server_check()
-
-    def proxy_changer(self, event=None):
-        """
-        Changes the proxy address to the value entered in the Tkinter Entry widget.
-
-        Args:
-            event (Event, optional): The event that triggered this method. Defaults to None.
-        """
-        proxy.change_address(f"{self.entry_ip.get()}:{self.entry_port.get()}")
-
-    def proxy_toggle(self):
-        """
-        Toggles the proxy on or off based on the value of the switch.
-        If the switch is off, the proxy is deactivated and the label text changes to 'Disabled' in red.
-        If the switch is on, the proxy is activated and the label text changes to 'Enabled' in green.
-        """
-        is_on = self.switch.get() == 1
-        action = proxy.activate if is_on else proxy.deactivate
-        label_text = "Enabled" if is_on else "Disabled"
-        text_color = "green" if is_on else "red"
-
-        if action():
-            self.label.configure(text=label_text, text_color=text_color)
-        else:
-            # Reset the switch to its original state if the action fails
-            if is_on:
-                self.switch.deselect()
-            else:
-                self.switch.select()
 
     def check_update(self, version=version):
         """Checks for new releases on Github. If a new release is available, it downloads and 'installs' it.
