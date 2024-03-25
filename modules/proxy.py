@@ -48,10 +48,10 @@ def deactivate():
 
 
 def change_address(new_address):
-    """Changes the proxy address by modifying the registry key value.
+    """Changes the proxy address in the Windows Registry to the specified new address.
 
     Args:
-        new_address (str): The new proxy address to be set.
+        new_address (str): The new proxy server address in the format "ip:port".
     """
     subprocess.run(
         fr'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True)
@@ -59,11 +59,11 @@ def change_address(new_address):
 
 
 def fill_in_ip():
-    """Gets the current proxy address and returns it to be set in the entry widget of the main program.
-    If no proxy address has been set it returns `0.0.0.0`
+    """Retrieves the current proxy IP address from the Windows Registry.
+    If no proxy address has been set, it returns '0.0.0.0'.
 
     Returns:
-        str: current proxy IP address
+        str: The current proxy IP address or '0.0.0.0' if unset.
     """
     try:
         value = subprocess.check_output(
@@ -75,10 +75,11 @@ def fill_in_ip():
 
 
 def fill_in_port():
-    """Gets the current proxy port address and returns it to be set in the entry widget of the main program.
-    If no port address has been set it returns 8080`
+    """Retrieves the current proxy port from the Windows Registry.
+    If no port address has been set, it returns '8080'.
+
     Returns:
-        str: current proxy port
+        str: The current proxy port or '8080' if unset.
     """
     try:
         value = subprocess.check_output(
@@ -90,11 +91,10 @@ def fill_in_port():
 
 
 def status_check():
-    """Checks if the proxy is enabled and returns `True` or `False` so the indicator switch can be
-    set in the main program.
+    """Checks if the proxy is currently enabled by querying the Windows Registry.
 
     Returns:
-        bool: current proxy status
+        bool: True if the proxy is enabled, False otherwise.
     """
     global logger
     # check current regkey value for proxy
@@ -114,6 +114,12 @@ def status_check():
 
 
 def server_check():
+    """Checks and logs the current proxy server settings from the Windows Registry.
+    If no proxy server is configured, it attempts to set a placeholder value and rechecks.
+
+    Returns:
+        str: The current proxy server address or a placeholder if initially unset.
+    """
     global logger
     # check current regkey value for proxy
     regkey_check = subprocess.Popen(

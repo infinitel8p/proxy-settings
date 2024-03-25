@@ -14,8 +14,6 @@ version = "1.3"
 image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 theme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "themes")
 
-# Create a handler to display log messages in the GUI
-
 
 class RootApp(customtkinter.CTk):
     """
