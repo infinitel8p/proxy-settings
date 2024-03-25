@@ -62,8 +62,9 @@ class WifiUi(customtkinter.CTkFrame):
         Updates the list of available WiFi networks displayed to the user.
 
         This method resets the countdown timer for refreshing the WiFi list, clears any existing network frames from the previous scan,
-        and performs a new scan for WiFi networks. For each network found, it creates a new frame and populates it with the network's details
-        and a connect button. It schedules `start_wifi_scanning` to be called again after the refresh interval to update the list regularly.
+        and performs a new scan for WiFi networks. For each network found, it creates a frame with the network's details displayed and a "Connect" button. If already connected to a network,
+        the network's details are diplayed in green with a "Disconnect" button. It schedules `start_wifi_scanning` to be called again after the refresh interval
+        to update the list regularly.
         """
 
         self.countdown_time = self.refresh_interval // 1000
@@ -75,21 +76,30 @@ class WifiUi(customtkinter.CTkFrame):
 
         # Scan for WiFi networks and get real data
         wifi_networks = wifi.scan_wifi_networks()
+        connected_ssid = wifi.get_connected_ssid()
 
         # Create frames and widgets for each network
         for network in wifi_networks:
             frame = customtkinter.CTkFrame(master=self.networks_container)
             frame.pack(pady=5, fill=customtkinter.X)
 
+            # Determine if this is the connected network
+            is_connected = network['connected']
+
             # Updated to use 'ssid' and 'signal' keys
             label_text = f"{network['ssid']} - Signal: {network['signal']}%"
             label = customtkinter.CTkLabel(
-                master=frame, text=label_text, font=("Arial", 10))
+                master=frame, text=label_text, font=("Arial", 10), text_color="green" if is_connected else "white")
             label.pack(side=customtkinter.LEFT, padx=(10, 0))
 
-            # Ensure the lambda function captures the current network's 'ssid' correctly in the loop
-            button = customtkinter.CTkButton(master=frame, text="Connect", width=50, height=20,
-                                             command=lambda n=network['ssid']: wifi.connect_to_wifi(n))
+            # Display a "Disconnect" button for the connected network, "Connect" button for others
+            button_text = "Disconnect" if is_connected else "Connect"
+            if is_connected:
+                button_command = lambda ssid=connected_ssid: wifi.disconnect_from_wifi(ssid, self)
+            else:
+                button_command = lambda ssid=network['ssid']: wifi.connect_to_wifi(ssid, self)
+            button = customtkinter.CTkButton(
+                master=frame, text=button_text, width=50, height=20, command=button_command)
             button.pack(side=customtkinter.RIGHT, padx=(0, 5))
 
             self.network_frames.append(frame)  # Keep track of the frame

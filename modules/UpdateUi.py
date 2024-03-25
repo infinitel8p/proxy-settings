@@ -11,7 +11,6 @@ import os
 class UpdateUi(customtkinter.CTkToplevel):
     """This class is used to create a pop-up window to inform the user that a new version of the application is available and ask if they want to update.
     Attributes:
-        hotkeys (list): List of hotkeys associated with the window
         updating (bool): A flag to indicate whether the update process is currently in progress
         parent (customtkinter.CTkToplevel): The parent window of this class
         background (CTkFrame): The background frame of the window
@@ -35,7 +34,6 @@ class UpdateUi(customtkinter.CTkToplevel):
 
         # Main Frame
         super().__init__(parent)
-        self.hotkeys = []
         self.wm_title("Update Required")
         self.attributes("-topmost", True)
         self.attributes("-toolwindow", 1)
