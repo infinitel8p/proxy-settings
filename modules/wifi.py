@@ -24,13 +24,16 @@ def get_connected_ssid():
 
     # Function to get the SSID of the currently connected Wi-Fi network
     command = "netsh wlan show interfaces"
-    result = subprocess.run(command, capture_output=True,
-                            text=True, shell=True, encoding='cp850')
-    for line in result.stdout.split('\n'):
-        if "SSID" in line and "BSSID" not in line:
-            return re.findall(r':\s*(.*)', line)[0].strip()
+    try:
+        
+        result = subprocess.check_output(
+            command, shell=True, text=True, stderr=subprocess.STDOUT, encoding='cp850')
+        for line in result.split('\n'):
+            if "SSID" in line and "BSSID" not in line:
+                return re.findall(r':\s*(.*)', line)[0].strip()
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to get connected SSID: {e.output}")
     return None
-
 
 def scan_wifi_networks():
     """
@@ -113,7 +116,7 @@ def connect_to_wifi(ssid, wifi_ui, password=None):
     if is_already_connected(ssid):
         logger.info(f"Already connected to {ssid}.")
         return
-    
+
     # Check if the network is known (saved)
     profile = find_network_profile(iface, ssid)
     if not profile:
@@ -146,7 +149,7 @@ def connect_to_wifi(ssid, wifi_ui, password=None):
     else:
         logger.error("Failed to connect for an unknown reason.")
     
-    wifi_ui.master.master.set("Proxy Settings") 
+    wifi_ui.master.master.set("Proxy Settings")
 
 
 def disconnect_from_wifi(ssid, wifi_ui):
@@ -212,30 +215,6 @@ def create_profile(ssid, password):
     profile.cipher = const.CIPHER_TYPE_CCMP
     profile.key = password
     return profile
-
-
-def get_connected_ssid():
-    """
-    Retrieves the SSID of the currently connected WiFi network.
-
-    Uses the `netsh wlan show interfaces` command to find the currently connected network's SSID.
-
-    Returns:
-        The SSID of the currently connected network, or None if the SSID could not be determined or if not connected to any network.
-    """
-
-    # Get the currently connected SSID
-    command = "netsh wlan show interfaces"
-    try:
-        output = subprocess.check_output(
-            command, shell=True, text=True, stderr=subprocess.STDOUT, encoding='cp850')
-        # Search for the SSID in the command output
-        for line in output.split('\n'):
-            if "SSID" in line and "BSSID" not in line:
-                return line.split(":")[1].strip()
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to get connected SSID: {e.output}")
-    return None
 
 
 def is_already_connected(ssid):
