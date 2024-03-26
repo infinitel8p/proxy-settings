@@ -61,6 +61,7 @@ class ProxyUi(customtkinter.CTkFrame):
             master=self.frame, text="Disabled", text_color="red")
         self.label.grid(row=1, column=0, sticky="e", padx=15, pady=(10, 0))
 
+        # Version Label
         self.version_label = customtkinter.CTkLabel(
             self, text=f"version {version}", text_color="grey", font=("Arial", 10))
         self.version_label.pack(side=customtkinter.BOTTOM)
