@@ -28,7 +28,7 @@ def activate():
         return True
     except PermissionError as e:
         logger.error(
-            "Insufficient permissions to change the registry. Please run this program as an administrator.")
+            f"Insufficient permissions to change the registry. Please run this program as an administrator. Error: {e}")
         return False
     except Exception as e:
         logger.error(f'An unexpected error occurred: {e}')
@@ -102,7 +102,7 @@ def fill_in_ip():
             0, winreg.KEY_READ
         )
 
-        proxy_server_ip, regtype = winreg.QueryValueEx(
+        proxy_server_ip, _ = winreg.QueryValueEx(
             registry_key, "ProxyServer")
         winreg.CloseKey(registry_key)
 
@@ -111,6 +111,7 @@ def fill_in_ip():
             ":")[0] if proxy_server_ip else "0.0.0.0"
         return ip_address
     except Exception as e:
+        print(e)  # printing e to make use of the exception
         return "0.0.0.0"
 
 
@@ -129,7 +130,7 @@ def fill_in_port():
             0, winreg.KEY_READ
         )
 
-        proxy_server_port, regtype = winreg.QueryValueEx(
+        proxy_server_port, _ = winreg.QueryValueEx(
             registry_key, "ProxyServer")
         winreg.CloseKey(registry_key)
 
@@ -155,7 +156,7 @@ def status_check():
             0, winreg.KEY_READ
         )
 
-        value, regtype = winreg.QueryValueEx(registry_key, "ProxyEnable")
+        value, _ = winreg.QueryValueEx(registry_key, "ProxyEnable")
         winreg.CloseKey(registry_key)
 
         if value == 1:
@@ -190,7 +191,7 @@ def server_check():
         )
 
         # Query the value of the ProxyServer key
-        value, regtype = winreg.QueryValueEx(registry_key, "ProxyServer")
+        value, _ = winreg.QueryValueEx(registry_key, "ProxyServer")
         winreg.CloseKey(registry_key)
 
         logger.info(f"Current Proxy Server: {value}")
