@@ -105,7 +105,7 @@ class UpdateUi(customtkinter.CTkToplevel):
         # Prepare download directory
         temp_dir = tempfile.gettempdir()
         download_path = os.path.join(os.path.join(os.path.join(
-            temp_dir, "Proxy Settings"), "Updates"), f"Update {self.parent.latest_version}")
+            os.path.dirname(temp_dir), 'Proxy Settings'), "Updates"), f"Update {self.parent.latest_version}")
         if not os.path.exists(download_path):
             os.makedirs(download_path)
 
