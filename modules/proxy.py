@@ -1,82 +1,67 @@
 import logging
-import subprocess
-from win32com.shell import shell as shell
-import pywintypes
-
-
-proxy_server_query = r'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer'
-proxy_status_query = r'reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable'
-deactivate_proxy = r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
-activate_proxy = r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 1 /f'
-
-startupinfo = subprocess.STARTUPINFO()
-startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-startupinfo.wShowWindow = subprocess.SW_HIDE
+import winreg
 
 logger = logging.getLogger(__name__)
 
 
 def activate():
     """
-    Activates the proxy by modifying the system's registry key value for the proxy settings.
-
-    This function attempts to run a command line instruction to activate proxy settings through a registry modification.
-    It requires administrative privileges, hence the use of 'runas' to elevate the command prompt session. If the user cancels
-    the operation or if any other error occurs, the function logs the event and returns False. On successful activation,
-    it logs the success and returns True.
+    Attempts to activate the system's proxy settings by modifying the Windows Registry.
+    If the script does not have sufficient permissions to modify the registry, it logs a message
+    instructing the user to run the script with administrative privileges.
 
     Returns:
-        True if the proxy was successfully activated, False if the activation was cancelled by the user or an error occurred.
-
-    Notes:
-        - The actual command to activate the proxy is stored in the 'activate_proxy' variable.
-        - This function requires the 'pywintypes' and 'shell' modules, with 'shell' being an instance of 'win32com.shell.shell'.
-        - Errors, including cancellation by the user, are logged.
+        True if the proxy was successfully activated, False otherwise.
     """
-
     try:
-        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                             lpParameters='/c ' + activate_proxy)
-    except pywintypes.error as e:
-        if e.winerror == 1223:
-            logger.warning('Activation cancelled by the user.')
-            return False
-        else:
-            logger.error(f'An error occurred: {e}')
-            return False
-    logger.info('Activated Proxy')
-    return True
+        registry_key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+            0, winreg.KEY_WRITE
+        )
+
+        # Set the ProxyEnable value to 1 (activated)
+        winreg.SetValueEx(registry_key, "ProxyEnable", 0, winreg.REG_DWORD, 1)
+        winreg.CloseKey(registry_key)
+
+        logger.info('Proxy activated successfully')
+        return True
+    except PermissionError as e:
+        logger.error(
+            "Insufficient permissions to change the registry. Please run this program as an administrator.")
+        return False
+    except Exception as e:
+        logger.error(f'An unexpected error occurred: {e}')
+        return False
 
 
 def deactivate():
     """
-    Deactivates the proxy by modifying the system's registry key value for the proxy settings.
-
-    Similar to the activate function, this function runs a command line instruction to deactivate the proxy settings
-    via a registry modification. Administrative privileges are required, and the function handles user cancellation
-    and other errors by logging them and returning False. On successful deactivation, it logs this and returns True.
+    Attempts to deactivate the system's proxy settings by modifying the Windows Registry.
+    If the script does not have sufficient permissions to modify the registry, it logs a message
+    instructing the user to run the script with administrative privileges.
 
     Returns:
-        True if the proxy was successfully deactivated, False if the deactivation was cancelled by the user or an error occurred.
-
-    Notes:
-        - The actual command to activate the proxy is stored in the 'deactivate_proxy' variable.
-        - Requires 'pywintypes' and 'shell' modules, with 'shell' being an instance of 'win32com.shell.shell'.
-        - Errors, including cancellation by the user, are logged.
+        True if the proxy was successfully deactivated, False otherwise.
     """
 
     try:
-        shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe',
-                             lpParameters='/c ' + deactivate_proxy)
-    except pywintypes.error as e:
-        if e.winerror == 1223:
-            logger.warning('Deactivation cancelled by the user.')
-            return False
-        else:
-            logger.error(f'An error occurred: {e}')
-            return False
-    logger.info('Deactivated Proxy')
-    return True
+        registry_key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Internet Settings", 0, winreg.KEY_WRITE)
+
+        # Set the ProxyEnable value to 0 (deactivated)
+        winreg.SetValueEx(registry_key, "ProxyEnable", 0, winreg.REG_DWORD, 0)
+        winreg.CloseKey(registry_key)
+
+        logger.info('Deactivated Proxy successfully')
+        return True
+    except PermissionError as e:
+        logger.error(
+            "Insufficient permissions to change the registry. Please run this program as an administrator.")
+        return False
+    except Exception as e:
+        logger.error(f'An error occurred: {e}')
+        return False
 
 
 def change_address(new_address):
@@ -86,9 +71,20 @@ def change_address(new_address):
     Args:
         new_address (str): The new proxy server address in the format "ip:port".
     """
-    subprocess.run(
-        fr'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d {new_address} /f', shell=True, startupinfo=startupinfo)
-    logger.info(f"Changed proxy address to {new_address}")
+    try:
+        registry_key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+            0, winreg.KEY_WRITE
+        )
+
+        winreg.SetValueEx(registry_key, "ProxyServer",
+                          0, winreg.REG_SZ, new_address)
+        winreg.CloseKey(registry_key)
+
+        logger.info(f"Changed proxy address to {new_address}")
+    except Exception as e:
+        logger.error(f"Failed to change proxy address: {e}")
 
 
 def fill_in_ip():
@@ -100,12 +96,22 @@ def fill_in_ip():
         str: The current proxy IP address or '0.0.0.0' if unset.
     """
     try:
-        value = subprocess.check_output(
-            proxy_server_query).decode("utf-8").split()[-1].split(":")[0]
-        return value
-    except:
-        value = "0.0.0.0"
-        return value
+        registry_key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+            0, winreg.KEY_READ
+        )
+
+        proxy_server_ip, regtype = winreg.QueryValueEx(
+            registry_key, "ProxyServer")
+        winreg.CloseKey(registry_key)
+
+        # If the ProxyServer key exists, extract the IP address
+        ip_address = proxy_server_ip.split(
+            ":")[0] if proxy_server_ip else "0.0.0.0"
+        return ip_address
+    except Exception as e:
+        return "0.0.0.0"
 
 
 def fill_in_port():
@@ -117,12 +123,22 @@ def fill_in_port():
         str: The current proxy port or '8080' if unset.
     """
     try:
-        value = subprocess.check_output(
-            proxy_server_query, shell=True).decode("utf-8").strip().split(":")[-1]
-        return value
-    except:
-        value = "8080"
-        return value
+        registry_key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
+            0, winreg.KEY_READ
+        )
+
+        proxy_server_port, regtype = winreg.QueryValueEx(
+            registry_key, "ProxyServer")
+        winreg.CloseKey(registry_key)
+
+        # If the ProxyServer key exists, extract the port
+        ip_address = proxy_server_port.split(
+            ":")[-1] if proxy_server_port else "8080"
+        return ip_address
+    except Exception as e:
+        return "8080"
 
 
 def status_check():
@@ -132,21 +148,30 @@ def status_check():
     Returns:
         bool: True if the proxy is enabled, False otherwise.
     """
-    global logger
-    # check current regkey value for proxy
-    regkey_check = subprocess.Popen(
-        proxy_status_query, shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
-    regkey_check_return = regkey_check.stdout.read().split()
+    try:
+        registry_key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+            0, winreg.KEY_READ
+        )
 
-    if regkey_check_return[-1] == b'0x0':
-        logger.info('Proxy is currently inactive')
+        value, regtype = winreg.QueryValueEx(registry_key, "ProxyEnable")
+        winreg.CloseKey(registry_key)
+
+        if value == 1:
+            logger.info('Proxy is currently active')
+            return True
+        else:
+            logger.info('Proxy is currently inactive')
+            return False
+
+    except FileNotFoundError:
+        # The ProxyEnable key does not exist
+        logger.info("The ProxyEnable registry key does not exist.")
         return False
-    if regkey_check_return[-1] == b'0x1':
-        logger.info('Proxy is currently active')
-        return True
-    else:
-        logger.debug(
-            f"{regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
+    except Exception as e:
+        logger.error(f'An unexpected error occurred: {e}')
+        return False
 
 
 def server_check():
@@ -157,48 +182,47 @@ def server_check():
     Returns:
         str: The current proxy server address or a placeholder if initially unset.
     """
-    global logger
-    # check current regkey value for proxy
-    regkey_check = subprocess.Popen(
-        proxy_server_query, shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
-    regkey_check_return = regkey_check.stdout.read().split()
-
-    # try to convert outputted bytes to string
     try:
-        value = regkey_check_return[-1].decode("utf-8")
-        # if output was indeed bytes return its value which now should be a string to main.py
-        if type(regkey_check_return[-1]) is bytes:
-            logger.info(f"Current Proxy Server: {value}")
-            return value
-        else:
-            # if the output was not in bytes log its value and type for debugging purposes
-            logger.debug(
-                f"{regkey_check_return[-1]}, {type(regkey_check_return[-1])}")
+        registry_key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+            0, winreg.KEY_READ
+        )
 
-    # handle error most likely resulting from missing reg key
-    except:
-        # create missing reg key with placeholder address
+        # Query the value of the ProxyServer key
+        value, regtype = winreg.QueryValueEx(registry_key, "ProxyServer")
+        winreg.CloseKey(registry_key)
+
+        logger.info(f"Current Proxy Server: {value}")
+        return value
+
+    except FileNotFoundError:
+        # The ProxyServer key does not exist, attempt to create it with a placeholder
         logger.warning("No Proxy Server found!")
-        logger.info("Creating REG_SZ key...")
-        logger.info("Setting proxy address...")
-        create_proxy_regsz = subprocess.Popen(
-            r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d 0.0.0.0:0 /f',
-            shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
-        create_proxy_regsz_return = create_proxy_regsz.stdout.read().decode("utf-8").split()
-        logger.info(" ".join(create_proxy_regsz_return))
-        logger.info("Set Proxy address to: 0.0.0.0:0")
+        try:
+            registry_key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+                0, winreg.KEY_WRITE
+            )
 
-        # try to read the value again
-        logging.info("Confirming Proxy Server...")
-        regkey_check2 = subprocess.Popen(
-            proxy_server_query, shell=True, stdout=subprocess.PIPE, startupinfo=startupinfo)
-        regkey_check_return2 = regkey_check2.stdout.read().split()
+            winreg.SetValueEx(registry_key, "ProxyServer",
+                              0, winreg.REG_SZ, "0.0.0.0:0")
+            winreg.CloseKey(registry_key)
 
-        # convert outputted bytes to string
-        value = regkey_check_return2[-1].decode("utf-8")
-        if type(regkey_check_return2[-1]) is bytes:
-            logger.info(f"Current Proxy Server: {value}")
-            return value
-        else:
-            logger.debug(
-                f"{regkey_check_return2[-1]}, {type(regkey_check_return2[-1])}")
+            logger.info("Set ProxyServer address to: 0.0.0.0:0")
+            return "0.0.0.0:0"
+
+        except PermissionError as e:
+            logger.error(
+                "Insufficient permissions to change the registry. Please run this program as an administrator.")
+            return "Permission Error"
+
+        except Exception as e:
+            logger.error(f'An unexpected error occurred: {e}')
+            return "Error"
+
+    except Exception as e:
+        logger.error(
+            f'An unexpected error occurred while checking the ProxyServer registry key: {e}')
+        return "Error"
