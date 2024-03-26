@@ -217,21 +217,21 @@ class UpdateUi(customtkinter.CTkToplevel):
 
         # create updater.ps1
         with open(os.path.join(download_path, "updater.ps1"), "w") as outfile:
-            outfile.write(f"""echo "Closing {self.name}.exe.."
+            outfile.write(f"""echo "Closing {self.name}.exe..."
 Start-Sleep 2
 taskkill /F /IM "{self.name}.exe" /T
 echo "Copying {self.name}.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), f'{self.name}_1.exe')}..."
 Start-Sleep 1
-Copy-Item -Path "{os.path.join(download_path, "{self.name}.exe")}" -Destination "{os.path.join(os.path.dirname(sys.executable), f"{self.name}_1.exe")}" -Force
+Copy-Item -Path "{os.path.join(download_path, self.name + '.exe')}" -Destination "{os.path.join(os.path.dirname(sys.executable), self.name + '_1.exe')}" -Force
 echo "Deleting old executable..."
 Start-Sleep 1
-Remove-Item "{os.path.join(os.path.dirname(sys.executable), f"{self.name}.exe")}"
+Remove-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}"
 echo "Renaming {self.name}_1.exe to {self.name}.exe..."
 Start-Sleep 1
-Rename-Item "{os.path.join(os.path.dirname(sys.executable), f"{self.name}_1.exe")}" "{os.path.join(os.path.dirname(sys.executable), f"{self.name}.exe")}"
+Rename-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '_1.exe')}" "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}"
 echo "Launching {self.name}.exe..."
 Start-Sleep 3
-start "{os.path.join(os.path.dirname(sys.executable), f"{self.name}.exe")}"
+start "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}"
 echo ""
 echo "Update finished!"
 echo "You can close this window now."
