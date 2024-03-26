@@ -26,7 +26,7 @@ class TkinterHandler(logging.Handler):
             os.makedirs(log_dir)
 
         # Configure logging to file
-        self.file_handler = logging.FileHandler(log_file)
+        self.file_handler = logging.FileHandler(log_file, encoding='utf-8')
         self.file_handler.setFormatter(
             logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
         self.file_handler.setLevel(logging.INFO)

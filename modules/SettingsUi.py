@@ -13,11 +13,6 @@ class SettingsUi(customtkinter.CTkFrame):
         self.configure(fg_color="transparent")
         self.root = parent
 
-        # Version Label
-        self.version_label = customtkinter.CTkLabel(
-            self, text=f"version {version}", text_color="grey", font=("Arial", 10))
-        self.version_label.pack(side=customtkinter.BOTTOM)
-
         # set log folder path or create it if it does not exist
         temp_dir = tempfile.gettempdir()
         self.log_path = os.path.join(os.path.join(
@@ -38,7 +33,15 @@ class SettingsUi(customtkinter.CTkFrame):
             with open(os.path.join(self.log_path, "settings.json"), "r") as infile:
                 json_object = json.load(infile)
 
-        self.save_settings("log_path")
+        # Save Button
+        self.save_button = customtkinter.CTkButton(
+            self, text="Save", command=lambda: self.save_settings("log_path"))
+        self.save_button.pack()
+
+        # Version Label
+        self.version_label = customtkinter.CTkLabel(
+            self, text=f"version {version}", text_color="grey", font=("Arial", 10))
+        self.version_label.pack(side=customtkinter.BOTTOM)
 
     def save_settings(self, new_value):
         """
@@ -62,4 +65,4 @@ class SettingsUi(customtkinter.CTkFrame):
             json.dump(settings_data, outfile)
 
         logging.info(
-            f"[SETTINGS SAVED] {new_value} = {settings_json[new_value]}")
+            f"Settings updated → {new_value} = {settings_json[new_value]}")
