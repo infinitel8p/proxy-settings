@@ -40,6 +40,9 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.parent = parent
         self.updating = False
 
+        self.name = "Proxy Settings"
+        self.url = "https://api.github.com/repos/infinitel8p/proxy-settings/releases"
+
         self.background = customtkinter.CTkFrame(
             self, bg_color=['gray92', 'gray14'], corner_radius=6)
         self.background.pack(padx=10, pady=10)
@@ -81,6 +84,38 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.output.configure(state='disabled')
         self.background.update()
 
+    def format_speed(self, bytes, seconds):
+        """Calculate and format speed without padding spaces."""
+        if seconds > 0:
+            speed = bytes / seconds
+            if speed < 1024:
+                unit = "B/s"
+            elif speed < 1024**2:
+                speed /= 1024
+                unit = "KB/s"
+            else:
+                speed /= 1024**2
+                unit = "MB/s"
+            return f"{speed:.2f} {unit}".rstrip()
+        else:
+            return "Calculating..."
+
+    def format_file_size(self, bytes):
+        """Format file size without padding spaces."""
+        if bytes < 1024:
+            size = bytes
+            unit = "B"
+        elif bytes < 1024**2:
+            size = bytes / 1024
+            unit = "KB"
+        elif bytes < 1024**3:
+            size = bytes / 1024**2
+            unit = "MB"
+        else:
+            size = bytes / 1024**3
+            unit = "GB"
+        return f"{size:.2f} {unit}".rstrip()
+
     def update(self, event=None):
         """
         The function that downloads and installs the update
@@ -105,16 +140,15 @@ class UpdateUi(customtkinter.CTkToplevel):
         # Prepare download directory
         temp_dir = tempfile.gettempdir()
         download_path = os.path.join(os.path.join(os.path.join(
-            os.path.dirname(temp_dir), 'Proxy Settings'), "Updates"), f"Update {self.parent.latest_version}")
+            os.path.dirname(temp_dir), self.name), "Updates"), f"Update {self.parent.latest_version}")
         if not os.path.exists(download_path):
             os.makedirs(download_path)
 
         self.add_output(f"Download directory created at:\n{download_path}\n\n")
 
-        url = "https://api.github.com/repos/infinitel8p/proxy-settings/releases"
         try:
             # Fetch release information
-            releases_response = requests.get(url)
+            releases_response = requests.get(self.url)
             releases_data = json.loads(releases_response.text)
             assets_response = requests.get((releases_data[0]["assets_url"]))
             assets_data = json.loads(assets_response.text)
@@ -127,25 +161,45 @@ class UpdateUi(customtkinter.CTkToplevel):
             if total_length is None:  # No content length header
                 self.add_output(
                     "Cannot determine file size for progress tracking.\n\n")
-                open(os.path.join(download_path, "Proxy Settings.exe"),
+                open(os.path.join(download_path, f"{self.name}.exe"),
                      'wb').write(response.content)
             else:
                 # Create and display the progress bar
                 total_length = int(total_length)
                 downloaded = 0
+
                 self.progress_bar = customtkinter.CTkProgressBar(
                     self.background)
                 self.progress_bar.pack(padx=5, pady=(
                     0, 5), fill=customtkinter.X, expand=True)
+                self.download_status_label = customtkinter.CTkLabel(
+                    self.background, text="Starting download...")
+                self.download_status_label.pack(padx=5, pady=(0, 5))
                 self.add_output("Downloading new release...\n\n")
 
                 # Download with progress update
-                with open(os.path.join(download_path, "Proxy Settings.exe"), 'wb') as f:
+                with open(os.path.join(download_path, f"{self.name}.exe"), 'wb') as f:
+                    start_time = time.time()
+
                     for data in response.iter_content(chunk_size=4096):
                         downloaded += len(data)
                         f.write(data)
+                        elapsed_time = time.time() - start_time
+                        download_speed = self.format_speed(
+                            downloaded, elapsed_time)
                         self.progress_bar.set(downloaded / total_length)
-                        self.background.update_idletasks()  # Update the UI to reflect progress
+
+                        # Update the download status label
+                        downloaded_formatted = self.format_file_size(
+                            downloaded)
+                        total_length_formatted = self.format_file_size(
+                            total_length)
+                        download_status_text = f"{downloaded_formatted} of {total_length_formatted}, {downloaded / total_length * 100:.2f}% ({download_speed})"
+                        self.download_status_label.configure(
+                            text=download_status_text)
+
+                        # Update the UI to reflect progress
+                        self.background.update_idletasks()
 
             # log successful download of new .exe
             self.add_output(f"Downloaded update to:\n{download_path}\n\n")
@@ -163,21 +217,21 @@ class UpdateUi(customtkinter.CTkToplevel):
 
         # create updater.ps1
         with open(os.path.join(download_path, "updater.ps1"), "w") as outfile:
-            outfile.write(f"""echo "Closing Proxy Settings.exe.."
+            outfile.write(f"""echo "Closing {self.name}.exe.."
 Start-Sleep 2
-taskkill /F /IM "Proxy Settings.exe" /T
-echo "Copying Proxy Settings.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), 'Proxy Settings_1.exe')}..."
+taskkill /F /IM "{self.name}.exe" /T
+echo "Copying {self.name}.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), f'{self.name}_1.exe')}..."
 Start-Sleep 1
-Copy-Item -Path "{os.path.join(download_path, "Proxy Settings.exe")}" -Destination "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings_1.exe")}" -Force
+Copy-Item -Path "{os.path.join(download_path, "{self.name}.exe")}" -Destination "{os.path.join(os.path.dirname(sys.executable), f"{self.name}_1.exe")}" -Force
 echo "Deleting old executable..."
 Start-Sleep 1
-Remove-Item "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings.exe")}"
-echo "Renaming Proxy Settings_1.exe to Proxy Settings.exe..."
+Remove-Item "{os.path.join(os.path.dirname(sys.executable), f"{self.name}.exe")}"
+echo "Renaming {self.name}_1.exe to {self.name}.exe..."
 Start-Sleep 1
-Rename-Item "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings_1.exe")}" "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings.exe")}"
-echo "Launching Proxy Settings.exe..."
+Rename-Item "{os.path.join(os.path.dirname(sys.executable), f"{self.name}_1.exe")}" "{os.path.join(os.path.dirname(sys.executable), f"{self.name}.exe")}"
+echo "Launching {self.name}.exe..."
 Start-Sleep 3
-start "{os.path.join(os.path.dirname(sys.executable), "Proxy Settings.exe")}"
+start "{os.path.join(os.path.dirname(sys.executable), f"{self.name}.exe")}"
 echo ""
 echo "Update finished!"
 echo "You can close this window now."
