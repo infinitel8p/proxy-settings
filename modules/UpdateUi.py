@@ -244,15 +244,18 @@ class UpdateUi(customtkinter.CTkToplevel):
                 outfile.write(f"""echo "Closing {self.name}.exe..."
 Start-Sleep 2
 taskkill /F /IM "{self.name}.exe" /T
-echo "Copying {self.name}.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), f'{self.name}_1.exe')}..."
+echo "Copying {self.name}.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), f'{self.name}.zip')}..."
 Start-Sleep 1
-Copy-Item -Path "{os.path.join(download_path, self.name + '.exe')}" -Destination "{os.path.join(os.path.dirname(sys.executable), self.name + '_1.exe')}" -Force
+Copy-Item -Path "{os.path.join(download_path, self.name + '.zip')}" -Destination "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" -Force
 echo "Deleting old executable..."
 Start-Sleep 1
 Remove-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}"
-echo "Renaming {self.name}_1.exe to {self.name}.exe..."
+echo "Extracting {self.name}.zip..."
 Start-Sleep 1
-Rename-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '_1.exe')}" "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}"
+Expand-Archive -Path "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" -DestinationPath "{os.path.dirname(sys.executable)}" -Force
+echo "Deleting {self.name}.zip..."
+Start-Sleep 1
+Remove-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}"
 echo "Launching {self.name}.exe..."
 Start-Sleep 3
 start "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}"
@@ -295,15 +298,18 @@ Exit""")
                 outfile.write(f"""echo "Closing {self.name}..."
 sleep 2
 osascript -e 'quit app "{self.name}"'
-echo "Copying {self.name} from {download_path} -> {os.path.join(os.path.dirname(sys.executable), self.name)}..."
+echo "Removing old version..."
 sleep 1
-cp "{os.path.join(download_path, self.name)}" "{os.path.join(os.path.dirname(sys.executable), self.name)}"
-echo "Deleting old executable..."
+rm -rf "{os.path.join(os.path.dirname(sys.executable), f'{self.name}.app')}"
+echo "Extracting new version from {self.name}.zip to {os.path.dirname(sys.executable)}..."
 sleep 1
-rm "{os.path.join(os.path.dirname(sys.executable), self.name)}"
-echo "Launching {self.name}..."
+unzip -o "{os.path.join(download_path, f'{self.name}.zip')}" -d "{os.path.dirname(sys.executable)}"
+echo "Deleting {self.name}.zip..."
+sleep 1
+rm "{os.path.join(download_path, f'{self.name}.zip')}"
+echo "Launching {self.name}.app..."
 sleep 3
-open "{os.path.join(os.path.dirname(sys.executable), self.name)}"
+open "{os.path.join(os.path.dirname(sys.executable), f'{self.name}.app')}"
 echo ""
 echo "Update finished!"
 echo "You can close this window now."
