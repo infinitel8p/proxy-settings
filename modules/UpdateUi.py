@@ -322,16 +322,16 @@ sleep 2
 osascript -e 'quit app "{self.name}"' >> "${{log_file}}" 2>&1
 echo "Removing old version..." | tee -a "${{log_file}}"
 sleep 1
-rm -rf "{os.path.join(os.path.dirname(sys.executable), f'{self.name}.app')}" >> "${{log_file}}" 2>&1
-echo "Extracting new version from {self.name}.zip to {os.path.dirname(sys.executable)}..." | tee -a "${{log_file}}"
+rm -rf "{os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))), f'{self.name}.app')}" >> "${{log_file}}" 2>&1
+echo "Extracting new version from {self.name}.zip to {os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable))))}..." | tee -a "${{log_file}}"
 sleep 1
-unzip -o "{os.path.join(download_path, f'{self.name}.zip')}" -d "{os.path.dirname(sys.executable)}" >> "${{log_file}}" 2>&1
+unzip -o "{os.path.join(download_path, f'{self.name}.zip')}" -d "{os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable))))}" >> "${{log_file}}" 2>&1
 echo "Deleting {self.name}.zip..." | tee -a "${{log_file}}"
 sleep 1
 rm "{os.path.join(download_path, f'{self.name}.zip')}" >> "${{log_file}}" 2>&1
 echo "Launching {self.name}.app..." | tee -a "${{log_file}}"
 sleep 3
-open "{os.path.join(os.path.dirname(sys.executable), f'{self.name}.app')}" >> "${{log_file}}" 2>&1
+open "{os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))), f'{self.name}.app')}" >> "${{log_file}}" 2>&1
 echo "" | tee -a "${{log_file}}"
 echo "Update finished!" | tee -a "${{log_file}}"
 echo "You can close this window now." | tee -a "${{log_file}}"
