@@ -164,15 +164,14 @@ def status_check():
             return True
         else:
             logger.info('Proxy is currently inactive')
-            return False
 
     except FileNotFoundError:
         # The ProxyEnable key does not exist
         logger.info("The ProxyEnable registry key does not exist.")
-        return False
     except Exception as e:
         logger.error(f'An unexpected error occurred: {e}')
-        return False
+
+    return False
 
 
 def server_check():
