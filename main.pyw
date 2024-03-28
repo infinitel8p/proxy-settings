@@ -49,6 +49,11 @@ class RootApp(customtkinter.CTk):
             from modules.WifiUi import WifiUi
             self.wifi_ui = WifiUi(self.tabview.tab("Wifi Settings"))
             self.wifi_ui.pack(fill="both", expand=True)
+        else:
+            # display label if not on windows
+            label = customtkinter.CTkLabel(
+                self.tabview.tab("Wifi Settings"), text="This feature is only available on Windows for now.")
+            label.pack(fill="both", expand=True)
 
         self.settings_ui = SettingsUi(self.tabview.tab("Settings"), version)
         self.settings_ui.pack(fill="both", expand=True)
