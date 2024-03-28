@@ -65,28 +65,67 @@ def change_address(new_address):
     Args:
         new_address (str): The new proxy server address in the format "ip:port".
     """
-    # networksetup -setwebproxy "Wi-Fi" proxy.example.com 8080
-    # networksetup -setsecurewebproxy "Wi-Fi" proxy.example.com 8080
-
-    logger.info(f"Changed proxy address to {new_address}")
+    try:
+        subprocess.check_call([
+            "networksetup", "-setwebproxy", "Wi-Fi", new_address.split(
+                ":")[0], new_address.split(":")[1]
+        ])
+        logger.info(f"Changed http proxy address to {new_address}")
+        subprocess.check_call([
+            "networksetup", "-setsecurewebproxy", "Wi-Fi", new_address.split(":")[
+                0], new_address.split(":")[1]
+        ])
+        logger.info(f"Changed https proxy address to {new_address}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to change proxy address: {e}")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
 
 
 def fill_in_ip():
     """
-    Retrieves the current proxy IP address.
-    If no proxy address has been set, it returns '0.0.0.0'.
+    Retrieves the current HTTP proxy IP address. If the HTTPS proxy address
+    is different, it sets the HTTPS proxy to match the HTTP proxy's IP address.
+    Returns '0.0.0.0' if no HTTP proxy is set.
 
     Returns:
-        str: The current proxy IP address or '0.0.0.0' if unset.
+        str: The current HTTP proxy IP address or '0.0.0.0' if unset.
     """
-    # networksetup -getwebproxy "Wi-Fi"
-
     try:
-        ip_address = ""
-        return ip_address
+        # Get HTTP proxy settings
+        http_result = subprocess.check_output(
+            ["networksetup", "-getwebproxy", "Wi-Fi"], encoding="utf-8"
+        )
+
+        # Extract IP from HTTP settings
+        http_ip = next((line.split(":")[1].strip(
+        ) for line in http_result.splitlines() if "Server:" in line), "0.0.0.0")
+
+        if http_ip == "0.0.0.0":
+            return http_ip
+
+        # Get HTTPS proxy settings for comparison
+        https_result = subprocess.check_output(
+            ["networksetup", "-getsecurewebproxy", "Wi-Fi"], encoding="utf-8"
+        )
+        https_ip = next((line.split(":")[1].strip(
+        ) for line in https_result.splitlines() if "Server:" in line), "0.0.0.0")
+
+        # If HTTP and HTTPS proxy IPs differ, update HTTPS proxy to match HTTP
+        if http_ip != https_ip:
+            subprocess.check_call(
+                ["networksetup", "-setsecurewebproxy", "Wi-Fi", http_ip, "80"]
+            )
+            print(f"Updated HTTPS proxy to match HTTP proxy: {
+                  https_ip} -> {http_ip}")
+
+        return http_ip
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to retrieve or set proxy settings: {e}")
     except Exception as e:
-        print(e)
-        return "0.0.0.0"
+        print(f"An unexpected error occurred: {e}")
+
+    return "0.0.0.0"
 
 
 def fill_in_port():
