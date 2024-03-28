@@ -45,7 +45,7 @@ class RootApp(customtkinter.CTk):
         self.proxy_ui = ProxyUi(self.tabview.tab("Proxy Settings"), version)
         self.proxy_ui.pack(fill="both", expand=True)
 
-        if platform.system() == "Darwin":
+        if platform.system() == "Windows":
             from modules.WifiUi import WifiUi
             self.wifi_ui = WifiUi(self.tabview.tab("Wifi Settings"))
             self.wifi_ui.pack(fill="both", expand=True)
