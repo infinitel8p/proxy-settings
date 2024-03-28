@@ -39,12 +39,12 @@ def deactivate():
         True if the proxy was successfully deactivated, False otherwise.
     """
     try:
-        # Enable HTTP proxy
+        # Disable HTTP proxy
         subprocess.check_call([
             "networksetup", "-setwebproxystate", "Wi-Fi", "off"
         ])
         logger.info("HTTP-Proxy deactivated successfully.")
-        # Enable HTTPS proxy
+        # Disable HTTPS proxy
         subprocess.check_call([
             "networksetup", "-setsecurewebproxystate", "Wi-Fi", "off"
         ])
@@ -66,6 +66,8 @@ def change_address(new_address):
         new_address (str): The new proxy server address in the format "ip:port".
     """
     try:
+        proxy_status = status_check()
+
         subprocess.check_call([
             "networksetup", "-setwebproxy", "Wi-Fi", new_address.split(
                 ":")[0], new_address.split(":")[1]
@@ -75,6 +77,11 @@ def change_address(new_address):
             "networksetup", "-setsecurewebproxy", "Wi-Fi", new_address.split(":")[
                 0], new_address.split(":")[1]
         ])
+
+        if not proxy_status:
+            # reset state to previous
+            deactivate()
+
         logger.info(f"Changed https proxy address to {new_address}")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to change proxy address: {e}")
@@ -105,11 +112,16 @@ def fill_in_ip():
         ) for line in https_result.splitlines() if "Server:" in line), "0.0.0.0")
 
         # If HTTP and HTTPS proxy IPs differ, update HTTPS proxy to match HTTP
+        proxy_status = status_check()
         if http_ip != https_ip:
             subprocess.check_call(
                 ["networksetup", "-setsecurewebproxy", "Wi-Fi", http_ip, "8080"])
             logger.info(
                 f"Updated HTTPS proxy IP to match HTTP proxy IP: {https_ip} -> {http_ip}")
+
+        if not proxy_status:
+            # reset state to previous
+            deactivate()
 
         return http_ip
     except subprocess.CalledProcessError as e:
@@ -146,11 +158,17 @@ def fill_in_port():
         ) for line in https_result.splitlines() if "Port:" in line), "8080")
 
         # If HTTP and HTTPS proxy IPs differ, update HTTPS proxy to match HTTP
+        proxy_status = status_check()
+
         if http_port != https_port:
             subprocess.check_call(
                 ["networksetup", "-setsecurewebproxy", "Wi-Fi", http_ip, "8080"])
             logger.info(
                 f"Updated HTTPS proxy to match HTTP proxy: {https_port} -> {http_port}")
+
+        if not proxy_status:
+            # reset state to previous
+            deactivate()
 
         return http_port
     except subprocess.CalledProcessError as e:
@@ -228,6 +246,8 @@ def server_check():
         # Check if the proxy server is not set or set to the default placeholder
         if server == "0.0.0.0" or not server:
             logger.warning("No Proxy Server found or set to default!")
+            proxy_status = status_check()
+
             # Proxy is not properly set, proceed to set the default values
             subprocess.check_output(
                 ["networksetup", "-setwebproxy", "Wi-Fi", "0.0.0.0", "0"], encoding="utf-8")
@@ -235,6 +255,11 @@ def server_check():
             subprocess.check_output(
                 ["networksetup", "-setsecurewebproxy", "Wi-Fi", "0.0.0.0", "0"], encoding="utf-8")
             logger.info("Set the HTTPS proxy server to 0.0.0.0:0")
+
+            if not proxy_status:
+                # reset state to previous
+                deactivate()
+
             return "0.0.0.0:0"
         else:
             # Proxy is properly set, log the server address
