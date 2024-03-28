@@ -1,7 +1,12 @@
 import customtkinter
 import logging
-from modules import proxy
+import platform
 from modules.loggingHandler import TkinterHandler
+
+if platform.system() == "Darwin":
+    import modules.proxy_macOS as proxy
+elif platform.system() == "Windows":
+    import modules.proxy as proxy
 
 
 class ProxyUi(customtkinter.CTkFrame):

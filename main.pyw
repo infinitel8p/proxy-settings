@@ -1,8 +1,8 @@
 from packaging.version import Version
 from modules.UpdateUi import UpdateUi
-from modules.WifiUi import WifiUi
 from modules.ProxyUi import ProxyUi
 from modules.SettingsUi import SettingsUi
+import platform
 import customtkinter
 import requests
 import logging
@@ -45,8 +45,10 @@ class RootApp(customtkinter.CTk):
         self.proxy_ui = ProxyUi(self.tabview.tab("Proxy Settings"), version)
         self.proxy_ui.pack(fill="both", expand=True)
 
-        self.wifi_ui = WifiUi(self.tabview.tab("Wifi Settings"))
-        self.wifi_ui.pack(fill="both", expand=True)
+        if platform.system() == "Darwin":
+            from modules.WifiUi import WifiUi
+            self.wifi_ui = WifiUi(self.tabview.tab("Wifi Settings"))
+            self.wifi_ui.pack(fill="both", expand=True)
 
         self.settings_ui = SettingsUi(self.tabview.tab("Settings"), version)
         self.settings_ui.pack(fill="both", expand=True)
