@@ -37,7 +37,8 @@ class UpdateUi(customtkinter.CTkToplevel):
         super().__init__(parent)
         self.wm_title("Update Required")
         self.attributes("-topmost", True)
-        self.attributes("-toolwindow", 1)
+        if platform.system() == "Windows":
+            self.attributes("-toolwindow", 1)
         self.parent = parent
         self.updating = False
 
@@ -51,7 +52,8 @@ class UpdateUi(customtkinter.CTkToplevel):
         # Set the label font and text size
         self.label1 = customtkinter.CTkLabel(
             self.background,
-            text=f"A new version of the application is available.\nCurrent version: {self.parent.version} | Latest release: {self.parent.latest_version}",
+            text=f"A new version of the application is available.\nCurrent version: {
+                self.parent.version} | Latest release: {self.parent.latest_version}",
             font=("Arial", 14, "bold"))
         self.label1.pack(padx=10, pady=5)
 
@@ -217,7 +219,8 @@ class UpdateUi(customtkinter.CTkToplevel):
                             downloaded)
                         total_length_formatted = self.format_file_size(
                             total_length)
-                        download_status_text = f"{downloaded_formatted} of {total_length_formatted}, {downloaded / total_length * 100:.2f}% ({download_speed})"
+                        download_status_text = f"{downloaded_formatted} of {total_length_formatted}, {
+                            downloaded / total_length * 100:.2f}% ({download_speed})"
                         self.download_status_label.configure(
                             text=download_status_text)
 
@@ -311,7 +314,7 @@ Log-Output "You can close this window now."
                 outfile.write(f"""#!/bin/bash
 log_file="{log_file_path}"
 
-echo "Logging update process to ${{log_file}}..."
+echo "Logging update process to ${{log_file}}..." | tee -a "${{log_file}}"
 open -R "{log_file_path}"
 
 echo "Closing {self.name}..." | tee -a "${{log_file}}"
@@ -348,8 +351,8 @@ exit""")
             time.sleep(2.5)
 
             # launch update
-            subprocess.Popen(
-                f"""osascript -e 'do shell script "sh {os.path.join(download_path, 'updater.sh')}"'""", shell=True)
+            subprocess.Popen(["sh", os.path.join(download_path, "updater.sh")])
+
             self.destroy()
 
         else:
