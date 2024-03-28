@@ -7,12 +7,7 @@ import customtkinter
 
 logger = logging.getLogger(__name__)
 
-startupinfo = subprocess.STARTUPINFO()
-startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-startupinfo.wShowWindow = subprocess.SW_HIDE
-
-# Using cp850 encoding for Windows console output - may need to adjust for other systems (e.g., utf-8)
-encoding = 'cp850'
+encoding = 'utf-8'
 
 
 def get_connected_ssid():

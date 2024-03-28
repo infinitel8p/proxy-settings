@@ -2,6 +2,7 @@ import customtkinter
 import subprocess
 import tempfile
 import requests
+import platform
 import json
 import time
 import sys
@@ -26,7 +27,7 @@ class UpdateUi(customtkinter.CTkToplevel):
         update(self, event=None): The function that downloads and installs the update. Defaults to `None`.
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: customtkinter.CTkToplevel):
         """Initializes the class by creating the window, setting its properties, creating the UI elements and adding the "Yes" and "No" buttons.
         Args:
             parent (customtkinter.CTkToplevel): The parent window of this class.
@@ -70,7 +71,7 @@ class UpdateUi(customtkinter.CTkToplevel):
             self.button_grid, text="Yes", command=self.update, width=90)
         self.button2.grid(row=0, column=1, padx=(5, 0))
 
-    def add_output(self, text):
+    def add_output(self, text: str):
         """
         Add text to the output textbox
         Parameters:
@@ -119,6 +120,7 @@ class UpdateUi(customtkinter.CTkToplevel):
     def update(self, event=None):
         """
         The function that downloads and installs the update
+
         Parameters:
             event (_type_): The event that triggered the function call. This is usually an event such as a button press
             and is automatically passed by the function call. Defaults to `None`.
@@ -137,6 +139,18 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.add_output("Prepairing update...\n\n")
         time.sleep(0.5)
 
+        # Detect OS (supports Windows and macOS)
+        os_name = platform.system()
+        if os_name == "Windows":
+            self.add_output("Detected Windows OS.\n\n")
+        elif os_name == "Darwin":
+            self.add_output("Detected macOS OS.\n\n")
+        else:
+            self.add_output(
+                f"Unsupported OS detected ({os_name}). Please update manually.\n\nClosing setup in 5 sec...")
+            time.sleep(5)
+            self.destroy()
+
         # Prepare download directory
         temp_dir = tempfile.gettempdir()
         download_path = os.path.join(os.path.join(os.path.join(
@@ -152,7 +166,16 @@ class UpdateUi(customtkinter.CTkToplevel):
             releases_data = json.loads(releases_response.text)
             assets_response = requests.get((releases_data[0]["assets_url"]))
             assets_data = json.loads(assets_response.text)
-            download_url = assets_data[0]["browser_download_url"]
+            # find asst with os_name in the name
+            for asset in assets_data:
+                if os_name in asset["name"]:
+                    download_url = asset["browser_download_url"]
+                    break
+            else:
+                self.add_output(
+                    f"Could not find a suitable download for {os_name}.\n\nClosing setup in 5 sec...")
+                time.sleep(5)
+                self.destroy()
 
             # Prepare for downloading
             response = requests.get(download_url, stream=True)
@@ -161,7 +184,7 @@ class UpdateUi(customtkinter.CTkToplevel):
             if total_length is None:  # No content length header
                 self.add_output(
                     "Cannot determine file size for progress tracking.\n\n")
-                open(os.path.join(download_path, f"{self.name}.exe"),
+                open(os.path.join(download_path, f"{self.name}.zip"),
                      'wb').write(response.content)
             else:
                 # Create and display the progress bar
@@ -178,7 +201,7 @@ class UpdateUi(customtkinter.CTkToplevel):
                 self.add_output("Downloading new release...\n\n")
 
                 # Download with progress update
-                with open(os.path.join(download_path, f"{self.name}.exe"), 'wb') as f:
+                with open(os.path.join(download_path, f"{self.name}.zip"), 'wb') as f:
                     start_time = time.time()
 
                     for data in response.iter_content(chunk_size=4096):
@@ -201,7 +224,7 @@ class UpdateUi(customtkinter.CTkToplevel):
                         # Update the UI to reflect progress
                         self.background.update_idletasks()
 
-            # log successful download of new .exe
+            # log successful download of new .zip
             self.add_output(f"Downloaded update to:\n{download_path}\n\n")
             time.sleep(0.5)
 
@@ -215,9 +238,10 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.add_output("Creating update handlers...\n\n")
         time.sleep(0.5)
 
-        # create updater.ps1
-        with open(os.path.join(download_path, "updater.ps1"), "w") as outfile:
-            outfile.write(f"""echo "Closing {self.name}.exe..."
+        if os_name == "Windows":
+            # create updater.ps1
+            with open(os.path.join(download_path, "updater.ps1"), "w") as outfile:
+                outfile.write(f"""echo "Closing {self.name}.exe..."
 Start-Sleep 2
 taskkill /F /IM "{self.name}.exe" /T
 echo "Copying {self.name}.exe from {download_path} -> {os.path.join(os.path.dirname(sys.executable), f'{self.name}_1.exe')}..."
@@ -236,31 +260,75 @@ echo ""
 echo "Update finished!"
 echo "You can close this window now."
 Exit""")
-            outfile.close()
+                outfile.close()
 
-        # log successful creation of updater.ps1
-        self.add_output("updater.ps1 successfully created!\n\n")
-        time.sleep(0.5)
+            # log successful creation of updater.ps1
+            self.add_output("updater.ps1 successfully created!\n\n")
+            time.sleep(0.5)
 
-        # create updater.bat
-        with open(os.path.join(download_path, "updater.bat"), "w") as outfile:
-            outfile.write(
-                f"""PowerShell -File "{os.path.join(download_path, "updater.ps1")}"\nexit""")
-            outfile.close()
+            # create updater.bat
+            with open(os.path.join(download_path, "updater.bat"), "w") as outfile:
+                outfile.write(
+                    f"""PowerShell -File "{os.path.join(download_path, "updater.ps1")}"\nexit""")
+                outfile.close()
 
-        # log successful creation of updater.bat
-        self.add_output("updater.bat successfully created!\n\n")
-        time.sleep(0.5)
+            # log successful creation of updater.bat
+            self.add_output("updater.bat successfully created!\n\n")
+            time.sleep(0.5)
 
-        # log update start in 5 sek
-        self.add_output("Starting update in 5 seconds!\n\n")
-        time.sleep(0.5)
+            # log update start in 5 sek
+            self.add_output("Starting update in 5 seconds!\n\n")
+            time.sleep(0.5)
 
-        # log estimated time
-        self.add_output("Estimated update time: 10-15 sec.\n\n")
-        time.sleep(2.5)
+            # log estimated time
+            self.add_output("Estimated update time: 10-15 sec.\n\n")
+            time.sleep(2.5)
 
-        # launch update
-        subprocess.Popen(
-            f"""start cmd /k "{os.path.join(download_path, 'updater.bat')}" """, shell=True)
-        self.destroy()
+            # launch update
+            subprocess.Popen(
+                f"""start cmd /k "{os.path.join(download_path, 'updater.bat')}" """, shell=True)
+            self.destroy()
+
+        elif os_name == "Darwin":
+            # create updater.sh
+            with open(os.path.join(download_path, "updater.sh"), "w") as outfile:
+                outfile.write(f"""echo "Closing {self.name}..."
+sleep 2
+osascript -e 'quit app "{self.name}"'
+echo "Copying {self.name} from {download_path} -> {os.path.join(os.path.dirname(sys.executable), self.name)}..."
+sleep 1
+cp "{os.path.join(download_path, self.name)}" "{os.path.join(os.path.dirname(sys.executable), self.name)}"
+echo "Deleting old executable..."
+sleep 1
+rm "{os.path.join(os.path.dirname(sys.executable), self.name)}"
+echo "Launching {self.name}..."
+sleep 3
+open "{os.path.join(os.path.dirname(sys.executable), self.name)}"
+echo ""
+echo "Update finished!"
+echo "You can close this window now."
+exit""")
+                outfile.close()
+
+            # log successful creation of updater.sh
+            self.add_output("updater.sh successfully created!\n\n")
+            time.sleep(0.5)
+
+            # log update start in 5 sek
+            self.add_output("Starting update in 5 seconds!\n\n")
+            time.sleep(0.5)
+
+            # log estimated time
+            self.add_output("Estimated update time: 10-15 sec.\n\n")
+            time.sleep(2.5)
+
+            # launch update
+            subprocess.Popen(
+                f"""osascript -e 'do shell script "sh {os.path.join(download_path, 'updater.sh')}"'""", shell=True)
+            self.destroy()
+
+        else:
+            self.add_output(
+                f"Unsupported OS detected ({os_name}). Please update manually.\n\nClosing setup in 5 sec...")
+            time.sleep(5)
+            self.destroy()
