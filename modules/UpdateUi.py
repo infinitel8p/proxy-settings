@@ -41,6 +41,7 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.updating = False
 
         self.url = "https://api.github.com/repos/infinitel8p/proxy-settings/releases"
+        # TODO executable is expected to be named self.name or the code will fail, maybe recheck logic in future
         self.name = "Proxy Settings"
 
         if platform.system() == "Windows":
