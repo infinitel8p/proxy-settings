@@ -5,12 +5,23 @@ Change the Proxy Server Address in a matter of seconds.
 Connect, Disconnect and add new WiFi networks directly from the application.
 
 ## How to setup:
+### Windows
+Download the `YouTube.Downloader.Windows.zip` and unzip it. -> https://github.com/infinitel8p/proxy-settings/releases/latest
+Now follow these steps:
+1. Open the .exe
+2. Click on More Informatiton in the Microsoft Defender SmartScreen Popup
+3. Click on Run Anyway
 
-1. Download the latest released `Proxy.Settings.exe` -> https://github.com/infinitel8p/proxy-settings/releases/latest
-2. Rename the file to `Proxy Settings.exe`
-3. Open the file
+### macOS
+Download the `YouTube.Downloader.Darwin.zip` and unzip it. -> https://github.com/infinitel8p/proxy-settings/releases/latest
+Now follow these steps:
+1. In the Finder on your Mac, locate the app you want to open.  
+   Don’t use Launchpad to do this. Launchpad doesn’t allow you to access the shortcut menu.
+2. Control-click the app icon.
+3. Click Open in the shortcut menu .
+   The app is saved as an exception to your security settings, and you can open it in the future by double-clicking it just as you can any registered app.
 
-## How to use Mobile VPN on PC:
+## How to use your Mobile VPN on PC:
 
 | Steps |                                                                                                     Description                                                                                                     |                                                                             Screenshots                                                                             |
 | :---: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: |
