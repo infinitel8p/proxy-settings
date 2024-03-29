@@ -46,6 +46,10 @@
    "value": false
   },
   {
+   "optionDest": "version_file",
+   "value": "C:/Users/Ludo/Desktop/proxy-settings/version.rc"
+  },
+  {
    "optionDest": "embed_manifest",
    "value": true
   },

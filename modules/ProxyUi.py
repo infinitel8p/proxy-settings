@@ -1,7 +1,12 @@
 import customtkinter
 import logging
-from modules import proxy
+import platform
 from modules.loggingHandler import TkinterHandler
+
+if platform.system() == "Darwin":
+    import modules.proxy_macOS as proxy
+elif platform.system() == "Windows":
+    import modules.proxy as proxy
 
 
 class ProxyUi(customtkinter.CTkFrame):
@@ -61,6 +66,7 @@ class ProxyUi(customtkinter.CTkFrame):
             master=self.frame, text="Disabled", text_color="red")
         self.label.grid(row=1, column=0, sticky="e", padx=15, pady=(10, 0))
 
+        # Version Label
         self.version_label = customtkinter.CTkLabel(
             self, text=f"version {version}", text_color="grey", font=("Arial", 10))
         self.version_label.pack(side=customtkinter.BOTTOM)

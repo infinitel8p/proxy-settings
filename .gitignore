@@ -1,2 +1,12 @@
+# Unnecessary folders
 __pycache__/
 .vscode
+output
+
+# Certificates
+*.pfx
+*.cer
+
+# .rc and manifest files
+*.rc
+*.manifest

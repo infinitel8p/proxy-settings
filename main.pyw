@@ -1,14 +1,15 @@
 from packaging.version import Version
 from modules.UpdateUi import UpdateUi
-from modules.WifiUi import WifiUi
 from modules.ProxyUi import ProxyUi
+from modules.SettingsUi import SettingsUi
+import platform
 import customtkinter
 import requests
 import logging
 import json
 import os
 
-version = "1.4"
+version = "1.5"
 
 # set image path
 image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
@@ -39,12 +40,23 @@ class RootApp(customtkinter.CTk):
         self.tabview.pack(fill="both", expand=True)
         self.tabview.add("Proxy Settings")
         self.tabview.add("Wifi Settings")
+        self.tabview.add("Settings")
 
         self.proxy_ui = ProxyUi(self.tabview.tab("Proxy Settings"), version)
         self.proxy_ui.pack(fill="both", expand=True)
 
-        self.wifi_ui = WifiUi(self.tabview.tab("Wifi Settings"))
-        self.wifi_ui.pack(fill="both", expand=True)
+        if platform.system() == "Windows":
+            from modules.WifiUi import WifiUi
+            self.wifi_ui = WifiUi(self.tabview.tab("Wifi Settings"))
+            self.wifi_ui.pack(fill="both", expand=True)
+        else:
+            # display label if not on windows
+            label = customtkinter.CTkLabel(
+                self.tabview.tab("Wifi Settings"), text="This feature is only available on Windows for now.")
+            label.pack(fill="both", expand=True)
+
+        self.settings_ui = SettingsUi(self.tabview.tab("Settings"), version)
+        self.settings_ui.pack(fill="both", expand=True)
 
         # check for software update
         self.check_update()
