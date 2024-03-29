@@ -37,13 +37,17 @@ class UpdateUi(customtkinter.CTkToplevel):
         super().__init__(parent)
         self.wm_title("Update Required")
         self.attributes("-topmost", True)
-        if platform.system() == "Windows":
-            self.attributes("-toolwindow", 1)
         self.parent = parent
         self.updating = False
 
-        self.name = "Proxy Settings"
         self.url = "https://api.github.com/repos/infinitel8p/proxy-settings/releases"
+
+        if platform.system() == "Windows":
+            self.attributes("-toolwindow", 1)
+            self.name, _ = os.path.splitext(os.path.basename(sys.executable))
+        elif platform.system() == "Darwin":
+            self.name, _ = os.path.splitext(os.path.basename(
+                os.path.dirname(os.path.dirname(sys.executable))))
 
         self.background = customtkinter.CTkFrame(
             self, bg_color=['gray92', 'gray14'], corner_radius=6)
@@ -52,8 +56,7 @@ class UpdateUi(customtkinter.CTkToplevel):
         # Set the label font and text size
         self.label1 = customtkinter.CTkLabel(
             self.background,
-            text=f"A new version of the application is available.\nCurrent version: {
-                self.parent.version} | Latest release: {self.parent.latest_version}",
+            text=f"A new version of the application is available.\nCurrent version: {self.parent.version} | Latest release: {self.parent.latest_version}",
             font=("Arial", 14, "bold"))
         self.label1.pack(padx=10, pady=5)
 
@@ -219,8 +222,7 @@ class UpdateUi(customtkinter.CTkToplevel):
                             downloaded)
                         total_length_formatted = self.format_file_size(
                             total_length)
-                        download_status_text = f"{downloaded_formatted} of {total_length_formatted}, {
-                            downloaded / total_length * 100:.2f}% ({download_speed})"
+                        download_status_text = f"{downloaded_formatted} of {total_length_formatted}, {downloaded / total_length * 100:.2f}% ({download_speed})"
                         self.download_status_label.configure(
                             text=download_status_text)
 
@@ -264,7 +266,7 @@ Start-Sleep -Seconds 1
 Copy-Item -Path "{os.path.join(download_path, self.name + '.zip')}" -Destination "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" -Force >> "{log_file_path}" 2>&1
 Log-Output "Deleting old executable..."
 Start-Sleep -Seconds 1
-Remove-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}" >> "{log_file_path}" 2>&1
+Remove-Item "{sys.executable}" >> "{log_file_path}" 2>&1
 Log-Output "Extracting {self.name}.zip..."
 Start-Sleep -Seconds 1
 Expand-Archive -Path "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" -DestinationPath "{os.path.dirname(sys.executable)}" -Force >> "{log_file_path}" 2>&1
@@ -273,7 +275,7 @@ Start-Sleep -Seconds 1
 Remove-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" >> "{log_file_path}" 2>&1
 Log-Output "Launching {self.name}.exe..."
 Start-Sleep -Seconds 3
-start "{os.path.join(os.path.dirname(sys.executable), self.name + '.exe')}" >> "{log_file_path}" 2>&1
+start "{sys.executable}" >> "{log_file_path}" 2>&1
 Log-Output "Update finished!"
 Log-Output "You can close this window now."
 """)
