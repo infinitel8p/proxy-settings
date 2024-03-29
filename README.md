@@ -6,14 +6,14 @@ Connect, Disconnect and add new WiFi networks directly from the application.
 
 ## How to setup:
 ### Windows
-Download the `YouTube.Downloader.Windows.zip` and unzip it. -> https://github.com/infinitel8p/proxy-settings/releases/latest
+Download the `YouTube.Downloader.Windows.zip` and unzip it. -> https://github.com/infinitel8p/proxy-settings/releases/latest  
 Now follow these steps:
 1. Open the .exe
 2. Click on More Informatiton in the Microsoft Defender SmartScreen Popup
 3. Click on Run Anyway
 
 ### macOS
-Download the `YouTube.Downloader.Darwin.zip` and unzip it. -> https://github.com/infinitel8p/proxy-settings/releases/latest
+Download the `YouTube.Downloader.Darwin.zip` and unzip it. -> https://github.com/infinitel8p/proxy-settings/releases/latest  
 Now follow these steps:
 1. In the Finder on your Mac, locate the app you want to open.  
    Don’t use Launchpad to do this. Launchpad doesn’t allow you to access the shortcut menu.
