@@ -249,36 +249,51 @@ class UpdateUi(customtkinter.CTkToplevel):
             log_file_path = os.path.join(
                 download_path, "update_log.txt")
             with open(os.path.join(download_path, "updater.ps1"), "w") as outfile:
-                outfile.write(f"""
-function Log-Output {{
+                outfile.write(f"""function Log-Output {{
     Param ([string]$message)
     echo $message
     echo $message >> "{log_file_path}"
 }}
 
+$errorOccurred = $false
+
 echo "Logging update process to {log_file_path}..."
-explorer.exe /select,"{log_file_path}"
 
 Log-Output "Closing {self.name}.exe..."
 Start-Sleep -Seconds 2
 taskkill /F /IM "{self.name}.exe" /T >> "{log_file_path}" 2>&1
+
 Log-Output "Copying {self.name}.exe from {download_path} to {os.path.join(os.path.dirname(sys.executable), f'{self.name}.zip')}..."
 Start-Sleep -Seconds 1
 Copy-Item -Path "{os.path.join(download_path, self.name + '.zip')}" -Destination "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" -Force >> "{log_file_path}" 2>&1
+if (-not $?) {{ $errorOccurred = $true }}
+
 Log-Output "Deleting old executable..."
 Start-Sleep -Seconds 1
 Remove-Item "{sys.executable}" >> "{log_file_path}" 2>&1
+if (-not $?) {{ $errorOccurred = $true }}
+
 Log-Output "Extracting {self.name}.zip..."
 Start-Sleep -Seconds 1
 Expand-Archive -Path "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" -DestinationPath "{os.path.dirname(sys.executable)}" -Force >> "{log_file_path}" 2>&1
-Log-Output "Deleting {self.name}.zip..."
+if (-not $?) {{ $errorOccurred = $true }}
+
+Log-Output "Deleting {self.name}.zip..."s
 Start-Sleep -Seconds 1
 Remove-Item "{os.path.join(os.path.dirname(sys.executable), self.name + '.zip')}" >> "{log_file_path}" 2>&1
+if (-not $?) {{ $errorOccurred = $true }}
+
 Log-Output "Launching {self.name}.exe..."
 Start-Sleep -Seconds 3
 start "{sys.executable}" >> "{log_file_path}" 2>&1
+if (-not $?) {{ $errorOccurred = $true }}
+
 Log-Output "Update finished!"
 Log-Output "You can close this window now."
+
+if ($errorOccurred) {{
+    explorer.exe /select,"{log_file_path}"
+}}
 """)
             outfile.close()
 
@@ -316,25 +331,39 @@ Log-Output "You can close this window now."
             with open(os.path.join(download_path, "updater.sh"), "w") as outfile:
                 outfile.write(f"""#!/bin/bash
 log_file="{log_file_path}"
+error_occurred=0
 
 echo "Logging update process to ${{log_file}}..." | tee -a "${{log_file}}"
-open -R "{log_file_path}"
 
 echo "Closing {self.name}..." | tee -a "${{log_file}}"
 sleep 2
 osascript -e 'quit app "{self.name}"' >> "${{log_file}}" 2>&1
+
 echo "Removing old version..." | tee -a "${{log_file}}"
 sleep 1
 rm -rf "{os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))), f'{self.name}.app')}" >> "${{log_file}}" 2>&1
+if [ $? -ne 0 ]; then error_occurred=1; fi
+
 echo "Extracting new version from {self.name}.zip to {os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable))))}..." | tee -a "${{log_file}}"
 sleep 1
 unzip -o "{os.path.join(download_path, f'{self.name}.zip')}" -d "{os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable))))}" >> "${{log_file}}" 2>&1
+if [ $? -ne 0 ]; then error_occurred=1; fi
+
 echo "Deleting {self.name}.zip..." | tee -a "${{log_file}}"
 sleep 1
 rm "{os.path.join(download_path, f'{self.name}.zip')}" >> "${{log_file}}" 2>&1
+if [ $? -ne 0 ]; then error_occurred=1; fi
+
 echo "Launching {self.name}.app..." | tee -a "${{log_file}}"
 sleep 3
 open "{os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))), f'{self.name}.app')}" >> "${{log_file}}" 2>&1
+if [ $? -ne 0 ]; then error_occurred=1; fi
+
+if [ $error_occurred -ne 0 ]; then
+    echo "An error occurred during the update process. Please check the log file for more details." | tee -a "${{log_file}}"
+    open -R "{log_file_path}"
+fi
+
 echo "" | tee -a "${{log_file}}"
 echo "Update finished!" | tee -a "${{log_file}}"
 echo "You can close this window now." | tee -a "${{log_file}}"
