@@ -41,13 +41,14 @@ class UpdateUi(customtkinter.CTkToplevel):
         self.updating = False
 
         self.url = "https://api.github.com/repos/infinitel8p/proxy-settings/releases"
+        self.name = "Proxy Settings"
 
         if platform.system() == "Windows":
             self.attributes("-toolwindow", 1)
-            self.name, _ = os.path.splitext(os.path.basename(sys.executable))
+            # self.name, _ = os.path.splitext(os.path.basename(sys.executable))
         elif platform.system() == "Darwin":
-            self.name, _ = os.path.splitext(os.path.basename(
-                os.path.dirname(os.path.dirname(sys.executable))))
+            # self.name, _ = os.path.splitext(os.path.basename(os.path.dirname(os.path.dirname(sys.executable))))
+            pass
 
         self.background = customtkinter.CTkFrame(
             self, bg_color=['gray92', 'gray14'], corner_radius=6)
