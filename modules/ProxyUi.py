@@ -90,12 +90,6 @@ class ProxyUi(customtkinter.CTkFrame):
             self.switch.select()
             self.label.configure(text="Enabled", text_color="green")
         proxy.server_check()
-        import os
-        import sys
-        self.logger.info(os.path.dirname(sys.executable))
-        self.logger.info(os.path.dirname(os.path.realpath(__file__)))
-        self.logger.info(os.path(sys.executable))
-        self.logger.info(os.path(os.path.realpath(__file__)))
 
     def proxy_changer(self, event=None):
         """
