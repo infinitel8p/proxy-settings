@@ -1,37 +1,48 @@
 import objc
-from CoreLocation import CLLocationManager
-import logging
+import CoreWLAN
 
-# Initialize the CLLocationManager to handle location services
-location_manager = CLLocationManager.alloc().init()
-location_manager.requestWhenInUseAuthorization()  # Request necessary permissions
 
-# Configure the logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+def scan_wifi_networks():
+    """
+    Scans for available WiFi networks on macOS and returns their details, including whether
+    the network is the currently connected one.
 
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
+    Due to macOS API limitations, this function lists available Wi-Fi networks and sets signal strengths
+    and authentication types to 'Unknown'. It also indicates whether each network is the one currently connected.
 
-logger.addHandler(ch)
+    Returns:
+        A list of dictionaries, where each dictionary represents a WiFi network with keys 'ssid', 'signal', 'auth',
+        and 'connected'. 'signal' and 'auth' are placeholders ('Unknown'), 'ssid' is the name of the network,
+        and 'connected' is a boolean indicating if it's the currently connected network.
+    """
 
-if __name__ == '__main__':
-    bundle_path = '/System/Library/Frameworks/CoreWLAN.framework'
-    objc.loadBundle('CoreWLAN', bundle_path=bundle_path,
-                    module_globals=globals())
+    networks = []
 
-    iface = CWInterface.interface()
-    print(f"Interface {str(iface.interfaceName())
-                       } - Connected to: {iface.ssid()}\n")
+    # Get the default WiFi interface
+    wifi_interface = CoreWLAN.CWInterface.interface()
 
-    networks, error = iface.scanForNetworksWithSSID_error_(None, None)
+    # Get the SSID of the currently connected network, if any
+    connected_ssid = wifi_interface.ssid()
 
-    seen_ssids = set()  # Keep track of SSIDs we've already seen
-    for network in networks:
-        ssid = network.ssid()
-        if ssid not in seen_ssids:  # Check if we've already logged this SSID
-            logger.info(ssid)
-            seen_ssids.add(ssid)  # Remember this SSID for future checks
+    # Perform a scan for networks
+    error = None
+    networks_list = wifi_interface.scanForNetworksWithSSID_error_(None, objc.nil)[
+        0]
+
+    seen_ssids = set()
+
+    for network in networks_list:
+        ssid_str = str(network.ssid())
+        if ssid_str not in seen_ssids:
+            seen_ssids.add(ssid_str)
+            networks.append({
+                'ssid': ssid_str,
+                'signal': 'Unknown',  # macOS does not easily provide signal strength for scanned networks
+                'auth': 'Unknown',  # macOS does not provide auth type for scanned networks in this method
+                'connected': (ssid_str == connected_ssid)
+            })
+
+    return networks
+
+
+print(scan_wifi_networks())
