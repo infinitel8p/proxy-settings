@@ -12,28 +12,41 @@ encoding = 'utf-8'
 
 def get_connected_ssid():
     """
-    Retrieves the SSID of the currently connected WiFi network on macOS.
+    Retrieves the SSID of the currently connected WiFi network on macOS using networksetup.
 
-    This function uses the `airport -I` command to obtain details about the current wireless
-    network connection. It parses the command output to extract the SSID of the network the device is currently
-    connected to. If no SSID is found (indicating no current connection), the function returns None.
+    This function uses the `networksetup -listallhardwareports` command to find the device name
+    for the Wi-Fi interface, then uses `networksetup -getairportnetwork <device_name>` to obtain details
+    about the current wireless network connection. It parses the command output to extract the SSID
+    of the network the device is currently connected to. If no SSID is found (indicating no current connection),
+    the function returns None.
 
     Returns:
         str: The SSID of the currently connected WiFi network, or None if the device is not connected to any network.
     """
 
-    # Path to the airport utility
-    airport_utility = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
-    command = [airport_utility, "-I"]
-
+    # Command to list all hardware ports
+    list_ports_command = ["networksetup", "-listallhardwareports"]
     try:
-        result = subprocess.run(command, check=True,
-                                capture_output=True, text=True)
-        for line in result.stdout.split('\n'):
-            if " SSID" in line:
-                return re.findall(r':\s*(.*)', line)[0].strip()
+        ports_result = subprocess.run(
+            list_ports_command, check=True, capture_output=True, text=True)
+        wifi_device = None
+        for line in ports_result.stdout.split('\n'):
+            if "Wi-Fi" in line or "Airport" in line:  # "Airport" is for backward compatibility
+                wifi_device = line.split(": ")[1]
+                break
+
+        if wifi_device:
+            # Command to get the SSID of the connected network using the Wi-Fi device name
+            get_ssid_command = ["networksetup",
+                                "-getairportnetwork", wifi_device]
+            ssid_result = subprocess.run(
+                get_ssid_command, check=True, capture_output=True, text=True)
+            ssid = re.search(r'Current Wi-Fi Network: (.*)',
+                             ssid_result.stdout)
+            if ssid:
+                return ssid.group(1).strip()
     except subprocess.CalledProcessError as e:
-        print(f"Failed to get connected SSID: {e.output}")
+        print(f"Failed to get connected SSID: {e.stderr}")
     return None
 
 
