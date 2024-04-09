@@ -41,15 +41,39 @@ def get_connected_ssid():
 
 def scan_wifi_networks():
     """
-    Scans for available WiFi networks and returns their details.
+    Scans for available WiFi networks on macOS and returns their SSIDs and RSSI.
+
+    This function indirectly calls the `airport` utility to scan for available networks.
+    It parses the command output to extract SSIDs and RSSI (Received Signal Strength Indicator) values
+    of the networks. This example may be limited in functionality and detail compared to the Windows version.
 
     Returns:
-        A list of dictionaries, where each dictionary represents a WiFi network with keys 'ssid', 'signal', and 'auth'.
-        'signal' is an integer representing the signal strength percentage, 'ssid' is the name of the network,
-        and 'auth' is the authentication type. If 'auth' or 'ssid' could not be determined, they are set to 'Unknown'.
+        A list of dictionaries, where each dictionary represents a WiFi network with keys 'ssid' and 'rssi'.
+        'rssi' is an integer representing the signal strength, 'ssid' is the name of the network.
     """
 
-    return None
+    airport_path = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
+    scan_command = [airport_path, "-s"]
+    try:
+        scan_result = subprocess.run(
+            scan_command, check=True, capture_output=True, text=True)
+        networks = []
+        for line in scan_result.stdout.split('\n')[1:]:  # Skip the header line
+            # Splitting by two or more spaces
+            parts = re.split(r'\s{2,}', line.strip())
+            if parts and len(parts) >= 3:
+                networks.append({
+                    'ssid': parts[0],
+                    'rssi': int(parts[2])
+                })
+
+        return networks
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to scan WiFi networks: {e.stderr}")
+    return []
+
+
+print(scan_wifi_networks())
 
 
 def connect_to_wifi(ssid, wifi_ui, password=None):
