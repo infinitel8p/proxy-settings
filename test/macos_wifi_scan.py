@@ -11,9 +11,11 @@ def scan_wifi_networks():
     and authentication types to 'Unknown'. It also indicates whether each network is the one currently connected.
 
     Returns:
-        A list of dictionaries, where each dictionary represents a WiFi network with keys 'ssid', 'signal', 'auth',
-        and 'connected'. 'signal' and 'auth' are placeholders ('Unknown'), 'ssid' is the name of the network,
-        and 'connected' is a boolean indicating if it's the currently connected network.
+        Available networks (list of dictionaries): A list where each dictionary represents a WiFi network with the following keys:
+            - ssid (str): The SSID of the WiFi network.
+            - signal (str): Placeholder for signal strength; always 'Unknown' due to macOS API limitations.
+            - auth (str): Placeholder for authentication type; always 'Unknown' due to macOS API limitations.
+            - connected (bool): Indicates if this is the currently connected network.
     """
 
     networks = []
@@ -25,9 +27,8 @@ def scan_wifi_networks():
     connected_ssid = wifi_interface.ssid()
 
     # Perform a scan for networks
-    error = None
-    networks_list = wifi_interface.scanForNetworksWithSSID_error_(None, objc.nil)[
-        0]
+    networks_list = wifi_interface.scanForNetworksWithSSID_error_(
+        None, objc.nil)[0]
 
     seen_ssids = set()
 
@@ -43,6 +44,3 @@ def scan_wifi_networks():
             })
 
     return networks
-
-
-print(scan_wifi_networks())

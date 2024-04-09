@@ -4,6 +4,8 @@ import time
 import logging
 import subprocess
 import customtkinter
+import objc
+import CoreWLAN
 
 logger = logging.getLogger(__name__)
 
@@ -41,39 +43,46 @@ def get_connected_ssid():
 
 def scan_wifi_networks():
     """
-    Scans for available WiFi networks on macOS and returns their SSIDs and RSSI.
+    Scans for available WiFi networks on macOS and returns their details, including whether
+    the network is the currently connected one.
 
-    This function indirectly calls the `airport` utility to scan for available networks.
-    It parses the command output to extract SSIDs and RSSI (Received Signal Strength Indicator) values
-    of the networks. This example may be limited in functionality and detail compared to the Windows version.
+    Due to macOS API limitations, this function lists available Wi-Fi networks and sets signal strengths
+    and authentication types to 'Unknown'. It also indicates whether each network is the one currently connected.
 
     Returns:
-        A list of dictionaries, where each dictionary represents a WiFi network with keys 'ssid' and 'rssi'.
-        'rssi' is an integer representing the signal strength, 'ssid' is the name of the network.
+        Available networks (list of dictionaries): A list where each dictionary represents a WiFi network with the following keys:
+            - ssid (str): The SSID of the WiFi network.
+            - signal (str): Placeholder for signal strength; always 'Unknown' due to macOS API limitations.
+            - auth (str): Placeholder for authentication type; always 'Unknown' due to macOS API limitations.
+            - connected (bool): Indicates if this is the currently connected network.
     """
 
-    airport_path = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
-    scan_command = [airport_path, "-s"]
-    try:
-        scan_result = subprocess.run(
-            scan_command, check=True, capture_output=True, text=True)
-        networks = []
-        for line in scan_result.stdout.split('\n')[1:]:  # Skip the header line
-            # Splitting by two or more spaces
-            parts = re.split(r'\s{2,}', line.strip())
-            if parts and len(parts) >= 3:
-                networks.append({
-                    'ssid': parts[0],
-                    'rssi': int(parts[2])
-                })
+    networks = []
 
-        return networks
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to scan WiFi networks: {e.stderr}")
-    return []
+    # Get the default WiFi interface
+    wifi_interface = CoreWLAN.CWInterface.interface()
 
+    # Get the SSID of the currently connected network, if any
+    connected_ssid = wifi_interface.ssid()
 
-print(scan_wifi_networks())
+    # Perform a scan for networks
+    networks_list = wifi_interface.scanForNetworksWithSSID_error_(
+        None, objc.nil)[0]
+
+    seen_ssids = set()
+
+    for network in networks_list:
+        ssid_str = str(network.ssid())
+        if ssid_str not in seen_ssids:
+            seen_ssids.add(ssid_str)
+            networks.append({
+                'ssid': ssid_str,
+                'signal': 'Unknown',  # macOS does not easily provide signal strength for scanned networks
+                'auth': 'Unknown',  # macOS does not provide auth type for scanned networks in this method
+                'connected': (ssid_str == connected_ssid)
+            })
+
+    return networks
 
 
 def connect_to_wifi(ssid, wifi_ui, password=None):

@@ -4,3 +4,4 @@ requests
 pywifi
 comtypes
 winreg
+pyobjc
