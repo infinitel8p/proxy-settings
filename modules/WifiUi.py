@@ -1,5 +1,12 @@
 import customtkinter
 from modules import wifi
+import platform
+
+
+if platform.system() == "Darwin":
+    import modules.wifi_macOS as wifi
+elif platform.system() == "Windows":
+    import modules.wifi as wifi
 
 
 class WifiUi(customtkinter.CTkFrame):
@@ -95,9 +102,11 @@ class WifiUi(customtkinter.CTkFrame):
             # Display a "Disconnect" button for the connected network, "Connect" button for others
             button_text = "Disconnect" if is_connected else "Connect"
             if is_connected:
-                button_command = lambda ssid=connected_ssid: wifi.disconnect_from_wifi(ssid, self)
+                def button_command(
+                    ssid=connected_ssid): return wifi.disconnect_from_wifi(ssid, self)
             else:
-                button_command = lambda ssid=network['ssid']: wifi.connect_to_wifi(ssid, self)
+                button_command = lambda ssid=network['ssid']: wifi.connect_to_wifi(
+                    ssid, self)
             button = customtkinter.CTkButton(
                 master=frame, text=button_text, width=50, height=20, command=button_command)
             button.pack(side=customtkinter.RIGHT, padx=(0, 5))

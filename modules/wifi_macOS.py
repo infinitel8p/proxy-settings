@@ -14,24 +14,10 @@ def get_connected_ssid():
     """
     Retrieves the SSID of the currently connected WiFi network.
 
-    This function uses the `netsh wlan show interfaces` command to obtain details about the current wireless
-    network connection. It parses the command output to extract the SSID of the network the device is currently
-    connected to. If no SSID is found (indicating no current connection), the function returns None.
-
     Returns:
         str: The SSID of the currently connected WiFi network, or None if the device is not connected to any network.
     """
 
-    command = ["netsh", "wlan", "show", "interfaces"]
-    try:
-        result = subprocess.run(command, check=True, text=True,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding=encoding, startupinfo=startupinfo)
-
-        for line in result.stdout.split('\n'):
-            if "SSID" in line and "BSSID" not in line:
-                return re.findall(r':\s*(.*)', line)[0].strip()
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to get connected SSID: {e.output}")
     return None
 
 
@@ -39,55 +25,13 @@ def scan_wifi_networks():
     """
     Scans for available WiFi networks and returns their details.
 
-    This function uses the `netsh` command to list available Wi-Fi networks and parses its output
-    to extract SSIDs, signal strengths, and authentication types of the networks. The networks are then sorted
-    by signal strength in descending order.
-
     Returns:
         A list of dictionaries, where each dictionary represents a WiFi network with keys 'ssid', 'signal', and 'auth'.
         'signal' is an integer representing the signal strength percentage, 'ssid' is the name of the network,
         and 'auth' is the authentication type. If 'auth' or 'ssid' could not be determined, they are set to 'Unknown'.
     """
 
-    # Run the "netsh" command to list the available Wi-Fi networks
-    result = subprocess.run(['netsh', 'wlan', 'show', 'networks', 'mode=Bssid'],
-                            capture_output=True, text=True, encoding=encoding, startupinfo=startupinfo)
-
-    # Parse the output to extract the SSIDs, signal strengths, and authentication types of the available networks
-    networks = []
-    current_network = {}
-    connected_ssid = get_connected_ssid()
-
-    for line in result.stdout.split('\n'):
-        line = line.strip()
-        if line.startswith('SSID'):
-            ssid = re.findall(r':\s*(.*)', line)[0]
-            current_network['ssid'] = ssid
-        elif line.startswith('Auth'):
-            auth = re.findall(r':\s*(.*)', line)[0]
-            current_network['auth'] = auth
-        elif line.startswith('Signal'):
-            signal = int(re.findall(r':\s*(.*)%', line)[0])
-            current_network['signal'] = signal
-            current_network['connected'] = (ssid == connected_ssid)
-            networks.append(current_network.copy())
-            current_network.clear()
-
-    # Set authentication type to 'Unknown' for networks where it was not found
-    for network in networks:
-        if 'auth' not in network:
-            network['auth'] = 'Unknown'
-
-    # Set SSID to 'Unknown' for networks where it was not found
-    for network in networks:
-        if 'ssid' not in network or network['ssid'] == '':
-            network['ssid'] = 'Unknown'
-            network['connected'] = False
-
-    # Sort the list of networks by signal strength
-    networks.sort(key=lambda x: (-x.get('connected', False), -x['signal']))
-
-    return networks
+    return None
 
 
 def connect_to_wifi(ssid, wifi_ui, password=None):
@@ -156,8 +100,6 @@ def connect_to_wifi(ssid, wifi_ui, password=None):
 
 def disconnect_from_wifi(ssid, wifi_ui):
     """
-    Disconnects from a specified WiFi network.
-
     This function disconnects the device from the WiFi network specified by the SSID.
     If the device is not connected to the specified network, it logs a message indicating that the device is not connected to that network.
 
@@ -166,16 +108,7 @@ def disconnect_from_wifi(ssid, wifi_ui):
         wifi_ui: A reference to the GUI component that initiated the disconnect action.
     """
 
-    wifi = PyWiFi()
-    iface = wifi.interfaces()[0]  # Select the first wireless interface
-
-    if is_already_connected(ssid):
-        iface.disconnect()
-        logger.info(f"Disconnected from {ssid}")
-    else:
-        logger.info(f"Not connected to {ssid}")
-
-    wifi_ui.master.master.set("Proxy Settings")
+    pass
 
 
 def find_network_profile(iface, ssid):
@@ -190,17 +123,11 @@ def find_network_profile(iface, ssid):
         The network profile matching the SSID if found, None otherwise.
     """
 
-    existing_profiles = iface.network_profiles()
-    for profile in existing_profiles:
-        if profile.ssid == ssid:
-            return profile
     return None
 
 
 def create_profile(ssid, password):
     """
-    Creates a new profile for connecting to a WiFi network.
-
     This function sets up a profile with the given SSID and password, configuring it for WPA2-PSK authentication by default.
 
     Parameters:
@@ -211,13 +138,7 @@ def create_profile(ssid, password):
         A PyWiFi Profile object configured for the specified network.
     """
 
-    profile = Profile()
-    profile.ssid = ssid
-    profile.auth = const.AUTH_ALG_OPEN
-    profile.akm.append(const.AKM_TYPE_WPA2PSK)
-    profile.cipher = const.CIPHER_TYPE_CCMP
-    profile.key = password
-    return profile
+    return None
 
 
 def is_already_connected(ssid):
@@ -231,14 +152,11 @@ def is_already_connected(ssid):
         True if the device is currently connected to the network specified by the SSID, False otherwise.
     """
 
-    connected_ssid = get_connected_ssid()
-    return connected_ssid == ssid
+    return None
 
 
 def wait_for_connection(iface, timeout=10):
     """
-    Waits for a connection to be established to a WiFi network.
-
     This function waits for up to a specified timeout for the device to connect to a WiFi network,
     checking the connection status at 1-second intervals.
 
@@ -250,9 +168,4 @@ def wait_for_connection(iface, timeout=10):
         A string indicating the connection result, either "Connected" or "Timeout".
     """
 
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        if iface.status() == const.IFACE_CONNECTED:
-            return "Connected"
-        time.sleep(1)
-    return "Timeout"
+    return None
