@@ -19,9 +19,9 @@ encoding = 'cp850'
 
 def get_connected_ssid():
     """
-    Retrieves the SSID of the currently connected WiFi network on macOS.
+    Retrieves the SSID of the currently connected WiFi network.
 
-    This function uses the `airport -I` command to obtain details about the current wireless
+    This function uses the `netsh wlan show interfaces` command to obtain details about the current wireless
     network connection. It parses the command output to extract the SSID of the network the device is currently
     connected to. If no SSID is found (indicating no current connection), the function returns None.
 
@@ -29,18 +29,16 @@ def get_connected_ssid():
         str: The SSID of the currently connected WiFi network, or None if the device is not connected to any network.
     """
 
-    # Path to the airport utility
-    airport_utility = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
-    command = [airport_utility, "-I"]
-
+    command = ["netsh", "wlan", "show", "interfaces"]
     try:
-        result = subprocess.run(command, check=True,
-                                capture_output=True, text=True)
+        result = subprocess.run(command, check=True, text=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding=encoding, startupinfo=startupinfo)
+
         for line in result.stdout.split('\n'):
-            if " SSID" in line:
+            if "SSID" in line and "BSSID" not in line:
                 return re.findall(r':\s*(.*)', line)[0].strip()
     except subprocess.CalledProcessError as e:
-        print(f"Failed to get connected SSID: {e.output}")
+        logger.error(f"Failed to get connected SSID: {e.output}")
     return None
 
 
