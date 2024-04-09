@@ -24,33 +24,19 @@ def get_connected_ssid():
         str: The SSID of the currently connected WiFi network, or None if the device is not connected to any network.
     """
 
-    # Command to list all hardware ports
-    list_ports_command = ["networksetup", "-listallhardwareports"]
     try:
-        ports_result = subprocess.run(
-            list_ports_command, check=True, capture_output=True, text=True)
-        wifi_device = None
-        for line in ports_result.stdout.split('\n'):
-            if "Wi-Fi" in line or "Airport" in line:  # "Airport" is for backward compatibility
-                wifi_device = line.split(": ")[1]
-                break
-
-        if wifi_device:
-            # Command to get the SSID of the connected network using the Wi-Fi device name
-            get_ssid_command = ["networksetup",
-                                "-getairportnetwork", wifi_device]
-            ssid_result = subprocess.run(
-                get_ssid_command, check=True, capture_output=True, text=True)
-            ssid = re.search(r'Current Wi-Fi Network: (.*)',
-                             ssid_result.stdout)
-            if ssid:
-                return ssid.group(1).strip()
+        # Command to get the SSID of the connected network using the Wi-Fi device name
+        get_ssid_command = ["networksetup",
+                            "-getairportnetwork", "en0"]
+        ssid_result = subprocess.run(
+            get_ssid_command, check=True, capture_output=True, text=True)
+        ssid = re.search(r'Current Wi-Fi Network: (.*)',
+                         ssid_result.stdout)
+        if ssid:
+            return ssid.group(1).strip()
     except subprocess.CalledProcessError as e:
         print(f"Failed to get connected SSID: {e.stderr}")
     return None
-
-
-print(get_connected_ssid())
 
 
 def scan_wifi_networks():
