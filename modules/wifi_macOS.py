@@ -27,7 +27,7 @@ def get_connected_ssid():
     try:
         # Command to get the SSID of the connected network using the Wi-Fi device name
         get_ssid_command = ["networksetup",
-                            "-getairportnetwork", "en0"]
+                            "-getairportnetwork", "en0"]  # en0 as default, may need to test/change
         ssid_result = subprocess.run(
             get_ssid_command, check=True, capture_output=True, text=True)
         ssid = re.search(r'Current Wi-Fi Network: (.*)',
@@ -71,49 +71,7 @@ def connect_to_wifi(ssid, wifi_ui, password=None):
         - If connecting to a network that requires a password not provided in the call, the function will prompt the user to input it.
     """
 
-    wifi = PyWiFi()
-    iface = wifi.interfaces()[0]  # Select the first wireless interface
-
-    # Check if already connected
-    if is_already_connected(ssid):
-        logger.info(f"Already connected to {ssid}.")
-        return
-
-    # Check if the network is known (saved)
-    profile = find_network_profile(iface, ssid)
-    if not profile:
-        # It's a new network, prompt for password
-        dialog = customtkinter.CTkInputDialog(
-            text=f"Enter password for {ssid}:", title="Password required")
-        from tkinter import PhotoImage
-        dialog.iconphoto(True, PhotoImage(file=os.path.join(os.path.dirname(
-            os.path.dirname(os.path.abspath(__file__))), "images", "verbindung.png")))
-
-        password = dialog.get_input()
-        if password == None:
-            logger.warning("Connection cancelled by the user.")
-            return
-
-    # If profile exists but no password was provided, try to connect using the existing profile
-    if profile and not password:
-        logger.info(f"Trying to connect to known network {ssid}...")
-        iface.connect(profile)
-    else:
-        # Connect with a new profile or provided password
-        profile = create_profile(ssid, password)
-        temp_profile = iface.add_network_profile(profile)
-        iface.connect(temp_profile)
-
-    result = wait_for_connection(iface)
-    if result == "Connected":
-        logger.info(f"Successfully connected to {ssid}")
-    elif result == "Timeout":
-        logger.warning(
-            "Connection attempt timed out. Please check the network status and password.")
-    else:
-        logger.error("Failed to connect for an unknown reason.")
-
-    wifi_ui.master.master.set("Proxy Settings")
+    # networksetup -setairportnetwork en0 WIFI_SSID_I_WANT_TO_JOIN WIFI_PASSWORD
 
 
 def disconnect_from_wifi(ssid, wifi_ui):
