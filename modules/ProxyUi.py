@@ -89,7 +89,11 @@ class ProxyUi(customtkinter.CTkFrame):
         if proxy.status_check():
             self.switch.select()
             self.label.configure(text="Enabled", text_color="green")
+
+        self.public_ip = None
+
         proxy.server_check()
+        self.public_ip = proxy.ip_check(self.public_ip)
 
     def proxy_changer(self, event=None):
         """
@@ -99,6 +103,7 @@ class ProxyUi(customtkinter.CTkFrame):
             event (Event, optional): The event that triggered this method. Defaults to None.
         """
         proxy.change_address(f"{self.entry_ip.get()}:{self.entry_port.get()}")
+        self.public_ip = proxy.ip_check(self.public_ip)
 
     def proxy_toggle(self):
         """
@@ -113,6 +118,7 @@ class ProxyUi(customtkinter.CTkFrame):
 
         if action():
             self.label.configure(text=label_text, text_color=text_color)
+            self.public_ip = proxy.ip_check(self.public_ip)
         else:
             # Reset the switch to its original state if the action fails
             if is_on:

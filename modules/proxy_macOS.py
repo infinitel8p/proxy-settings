@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -271,3 +272,52 @@ def server_check():
         logger.error(f"An unexpected error occurred: {e}")
 
     return "0.0.0.0:0"
+
+
+def ip_check(public_ip: str = None) -> dict | None:
+    """
+    Checks and logs the current public IP address of the system along with geolocation information.
+    This is useful for verifying that the proxy is working correctly and determining the system's geolocation.
+
+    Args:
+        public_ip (str, optional): The previous public IP address. This is used to log changes in the IP address.
+
+    Returns:
+        dict | None: A dictionary containing the current public IP address and geolocation information, or None if the request fails.
+    """
+
+    try:
+        response = requests.get('https://ipinfo.io', timeout=10)
+        response.raise_for_status()  # Raise an error for bad status codes
+        data = response.json()
+
+        ip_address = data.get('ip')
+        geolocation = {
+            'ip': ip_address,
+            'city': data.get('city'),
+            'region': data.get('region'),
+            'country': data.get('country'),
+            'loc': data.get('loc')  # Latitude and longitude
+        }
+        ip_address = geolocation['ip']
+
+        if public_ip:
+            if public_ip != ip_address:
+                logger.info(f"Public IP address changed from {
+                            public_ip} to {ip_address}")
+                logger.info(f"Geolocation: City={geolocation['city']}, {geolocation['region']}, {
+                    geolocation['country']}")
+            else:
+                logger.warn(
+                    f"Public IP address remains the same: {ip_address}")
+        else:
+            logger.info(f"Public IP address: {ip_address}")
+            logger.info(f"Geolocation: City={geolocation['city']}, {geolocation['region']}, {
+                geolocation['country']}")
+
+        return ip_address
+
+    except requests.RequestException as e:
+        logger.error(
+            f"Failed to retrieve public IP address and geolocation: {e}")
+        return None
